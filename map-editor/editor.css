@@ -1,0 +1,128 @@
+body, html {
+    width: 100%;
+    height: 100%;
+    max-height: 100vh;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: #232323;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: stretch;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+.split-container {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.text-button {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 2rem;
+    padding: 0;
+    cursor: pointer;
+    opacity: 0.6;
+}
+
+.text-button:hover {
+    opacity: 1;
+}
+
+.plus-button {
+    margin-top: -4px;
+}
+
+h1 {
+    text-align: center;
+}
+
+h1, h2 {
+    margin: 8px 0;
+}
+
+img {
+    width: 100%;
+}
+
+main {
+    position: fixed;
+    max-height: 100vh;
+    display: flex;
+    flex-direction: row;
+    justify-content: stretch;
+    width: 100%;
+    flex: 1 0 auto;
+}
+
+main > div {
+    border: 2px solid white;
+    margin: 8px;
+    padding: 4px 16px;
+}
+
+#editor-container {
+    flex: 1 1 70%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: stretch;
+}
+
+.map-toolbar {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+}
+
+.map-toolbar > * {
+    margin-right: 8px;
+}
+
+#map-container {
+    flex: 1;
+    width: 100%;
+    overflow: scroll;
+}
+
+#map-canvas {
+    image-rendering: pixelated;
+}
+
+#tilemap-container {
+    flex: 1 1 30%;
+    min-width: 400px;
+    display: flex;
+    flex-direction: column;
+    justify-content: stretch;
+}
+
+#tileset {
+    flex: 1 1 auto;
+    height: 100%;
+    overflow-y: scroll;
+}
+
+.tile {
+    cursor: pointer;
+    width: 4vw;
+    height: 4vw;
+    margin: 2px;
+    transition: border 0.2s;
+    border: 2px solid transparent;
+}
+
+.tile:hover {
+    border: 2px solid #ffffff80;
+}
+
+.tile.selected {
+    border: 2px solid white;
+}

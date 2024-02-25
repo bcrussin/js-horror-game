@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Map Editor - JS Horror Game</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="stylesheet" type="text/css" href="editor.css">
+    </head>
+    <body>
+        <main>
+            <div id="editor-container">
+                <div class="split-container">
+                    <div class="map-toolbar">
+                        <h2>Map</h2>
+                        <button class="text-button" onclick="loadMap()">📋</button>
+                        <button class="text-button" onclick="saveMap()">💾</button>
+                    </div>
+                    <div class="map-toolbar">
+                        <button class="text-button plus-button" onclick="zoomOut()">-</button>
+                        <button class="text-button plus-button" onclick="zoomIn()">+</button>
+                    </div>
+                </div>
+                <div id="map-container">
+                    <canvas id="map-canvas"></canvas>
+                </div>
+            </div>
+
+            <div id="tilemap-container">
+                <h2>Tiles</h2>
+                <div id="tileset">
+                </div>
+            </div>
+        </main>
+
+        <script src="../scripts/renderer.js"></script>
+        <script src="editor.js"></script>
+    </body>
+</html>
