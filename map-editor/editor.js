@@ -21,7 +21,7 @@ let map = {
 let isDragging = false;
 
 let selectedTileset = 0;
-let selectedTile = 0;
+let selectedTile = null;
 
 let mapData;
 
@@ -58,12 +58,19 @@ function getTiles() {
 }
 
 function selectTile(event) {
-    if (!!selectedTile) {
+    if (selectedTile != null) {
+        // Remove border from previously selected tile
         let oldSelected = document.getElementById(selectedTile);
         oldSelected.classList.remove('selected');
     }
-    selectedTile = parseInt(event.target.id);
-    event.target.classList.add('selected');
+    if (selectedTile === parseInt(event.target.id)) {
+        // Deselect tile if clicked again
+        selectedTile = null;
+    } else {
+        // Select tile if not currently selected
+        selectedTile = parseInt(event.target.id);
+        event.target.classList.add('selected');
+    }
 }
 
 function initMap () {
@@ -126,10 +133,10 @@ function updateMap() {
     }
 
     for (let i = 0; i <= map.width; i++) {
-        renderer.line(i * cellSize, 0, i * cellSize, canvas.height, 'white', 2);
+        renderer.line(i * cellSize, 0, i * cellSize, canvas.height, '#ffffff80', 1);
     }
     for (let i = 0; i <= map.height; i++) {
-        renderer.line(0, i * cellSize, canvas.width, i * cellSize, 'white', 2);
+        renderer.line(0, i * cellSize, canvas.width, i * cellSize, '#ffffff80', 1);
     }
 }
 
