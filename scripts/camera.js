@@ -14,22 +14,23 @@ class Camera {
 
     set zoom(value) {
         this._zoom = value;
+        this.width = this.level.width * value;
+        this.height = this.level.height * value;
     }
 
-    setZoom = (zoom) => {
-        this.zoom = zoom;
-        this.width = this.level.width * zoom;
-        this.height = this.level.height * zoom;
+    setZoom = (value) => {
+        this.zoom = value;
     }
 
     setLevel = (level) => {
         if (!level) return;
         
         this.level = level;
-        let aspect = window.innerWidth / window.innerHeight;
-        this.width = 300 * aspect//level.width;
-        this.height = 300//level.height;
-        console.log(this.width)
+        let aspect = window.innerHeight / window.innerWidth;
+        let size = this.level.width * 2;
+        this.zoom = this.level.width / window.innerWidth * 10;
+        this.width = size//level.width;
+        this.height = size * aspect//level.height;
     }
 
     getTileWidth = () => {

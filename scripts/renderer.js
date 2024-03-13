@@ -82,17 +82,17 @@ class Renderer {
 
 	getTileWidth = () => {
 		//console.log(this.canvas.width, this.camera.width, this.canvas.width / this.camera.width, (this.canvas.width / this.camera.width) * this.camera.getTileWidth())
-		return (this.canvas.width / this.camera.width) * this.camera.getTileWidth();
+		return (this.canvas.width / this.camera.width) * this.camera.level.tileSize//this.camera.getTileWidth();
 	}
 
 	getTileHeight= () => {
-		return (this.canvas.height / this.camera.height) * this.camera.getTileHeight();
+		return (this.canvas.height / this.camera.height) * this.camera.level.tileSize//this.camera.getTileHeight();
 	}
 	
 	drawTile(image, id, x, y) {
 		this.rect(this.toScreenX(this.camera.width) - 5, this.toScreenY(this.camera.height) - 5, 10, 10, 'green')
 		//console.log(this.toScreenX(this.camera.width - 1), this.toScreenY(this.camera.height - 1), this.canvas.width)
-		let tileSize = 16;
+		let tileSize = this.camera.level.tileSize;
 
 		let cellWidth = this.camera.getTileWidth();
 		let cellHeight = this.camera.getTileHeight();
@@ -112,13 +112,14 @@ class Renderer {
 			console.log("   " + this.camera.toCameraX(x * cellWidth))
 
 		}
+		console.log(this.camera.toCameraX(x * tileSize))
 		this.ctx.drawImage(
 			image, 
 			sx * tileSize, 
 			sy * tileSize, 
 			tileSize, 
 			tileSize, 
-			this.toScreenX(x * cellWidth), this.toScreenY(y * cellHeight), 
+			this.toScreenX(x * tileSize), this.toScreenY(y * tileSize), 
 			tileWidth, 
 			tileHeight
 		);
