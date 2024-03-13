@@ -26,6 +26,7 @@ class Camera {
         if (!level) return;
         
         this.level = level;
+        let multiplier = 2;
         let aspect;
         let size = this.level.width * 2;
         this.zoom = this.level.width / window.innerWidth * 10;
@@ -33,12 +34,12 @@ class Camera {
 
         if (wider) {
             aspect =  window.innerWidth / window.innerHeight;
-            this.width = level.height * aspect;
-            this.height = level.height / 1;
+            this.width = (level.height / multiplier) * aspect;
+            this.height = level.height / multiplier;
         } else {
             aspect = window.innerHeight / window.innerWidth;
-            this.width = level.width / 1;
-            this.height = level.width * aspect;
+            this.width = level.width / multiplier;
+            this.height = (level.width / multiplier) * aspect;
         }
     }
 
@@ -57,10 +58,15 @@ class Camera {
 
     toCameraX = (x) => {
         //console.log(x, this.width, (x / this.width) - this.x)
-        return (x / this.width) - this.x;
+        return ((x - this.x) / this.width);
     }
 
     toCameraY = (y) => {
-        return (y / this.height) - this.y;
+        return ((y - this.y) / this.height);
+    }
+
+    setCenter = (x, y) => {
+        this.x = x - (this.width / 2);
+        this.y = y - (this.height / 2);
     }
 }

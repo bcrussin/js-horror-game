@@ -37,7 +37,7 @@ class Renderer {
 	rect = (x, y, w, h, c) => {
 		this.ctx.setTransform(1, 0, 0, 1, 0, 0);
 		this.ctx.fillStyle = c;
-		this.ctx.fillRect(x, y, w, h);
+		this.ctx.fillRect(this.toScreenX(x), this.toScreenY(y), w, h);
 	};
 
 	line = (x1, y1, x2, y2, c, thickness) => {
@@ -105,14 +105,7 @@ class Renderer {
 		let tilesetHeight = Math.floor(image.height / tileSize);
 		let sx = Math.floor(id / tilesetHeight);
 		let sy = id % tilesetHeight;
-		if (y === 0 && false) {
-			console.log("*")
-			console.log(this.camera.level.width)
-			console.log(x * cellWidth)
-			console.log("   " + this.camera.toCameraX(x * cellWidth))
-
-		}
-		console.log(this.camera.toCameraX(x * tileSize))
+		
 		this.ctx.drawImage(
 			image, 
 			sx * tileSize, 

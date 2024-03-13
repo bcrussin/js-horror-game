@@ -8,6 +8,12 @@ tilesetImage.src = "../tilesets/tiles.png";
 const renderer = new Renderer(canvas, ctx);
 const maskRenderer = new Renderer(maskCanvas, maskCtx);
 
+let map = new Level();
+const player = new Player({
+	map: map
+});
+const SPEED = 0.8;
+
 const LINE_PADDING = 10;
 const LINE_MIN_LENGTH = 20;
 
@@ -54,15 +60,16 @@ let leftClicked = false;
 let rightClicked = false;
 
 let loop;
-let map;
 let camera;
+
 tilesetImage.onload = () => {
-	map = new Level();
-	console.log(map)
+	console.log(map);
 	map.load("chamber").then((data) => {
 		map.data = data;
 		camera = new Camera(map);
 		renderer.setCamera(camera);
+		player.x = camera.width / 2;
+		player.y = camera.height / 2;
 
 		onResize();
 		loop = setInterval(() => {
@@ -74,28 +81,61 @@ tilesetImage.onload = () => {
 				}
 			}
 
-			window.requestAnimationFrame(render);
+			window.requestAnimationFrame(update);
 		}, 1000 / FPS);
 	});
 };
 
-addEventListener('resize', () => {
-    onResize();
+addEventListener("resize", () => {
+	onResize();
 });
 
 window.onkeydown = (e) => {
+	switch (e.key) {
+		case "w":
+			Key.press("w");
+			break;
+		case "a":
+			Key.press("a");
+			break;
+		case "s":
+			Key.press("s");
+			break;
+		case "d":
+			Key.press("d");
+			break;
+		case "ArrowLeft":
+			//camera.setZoom(camera.zoom - 0.1);
+			camera.x--;
+			break;
+		case "ArrowRight":
+			//camera.setZoom(camera.zoom + 0.1);
+			camera.x++;
+			break;
+		case "ArrowUp":
+			//camera.setZoom(2);
+			camera.y++;
+			break;
+		case "ArrowDown":
+			//camera.setZoom(1);
+			camera.y--;
+			break;
+	}
+};
+
+window.onkeyup = (e) => {
 	switch(e.key) {
-		case 'ArrowLeft':
-			camera.setZoom(camera.zoom - 0.1);
+		case "w":
+			Key.release("w");
 			break;
-		case 'ArrowRight':
-			camera.setZoom(camera.zoom + 0.1);
+		case "a":
+			Key.release("a");
 			break;
-		case 'ArrowUp':
-			camera.setZoom(2);
+		case "s":
+			Key.release("s");
 			break;
-		case 'ArrowDown':
-			camera.setZoom(1);
+		case "d":
+			Key.release("d");
 			break;
 	}
 }
@@ -166,6 +206,18 @@ function drawMap() {
 	}
 }
 
+function update() {
+	let h = -Key.isPressed("a") + Key.isPressed("d");
+	let v = -Key.isPressed("w") + Key.isPressed("s");
+
+	player.moveHorizontally(h * SPEED);
+	player.moveVertically(v * SPEED);
+
+	camera.setCenter(Math.floor(player.x), Math.floor(player.y));
+	//console.log(Math.floor(player.x), Math.floor(player.y))
+	render();
+}
+
 function render() {
 	renderer.clear("black");
 	ctx.globalCompositeOperation = "source-over";
@@ -209,6 +261,8 @@ function render() {
 	}
 
 	drawMap();
+
+	renderer.rect(player.x, player.y, 8, 8, "blue");
 }
 
 function renderMask(isMask = true) {

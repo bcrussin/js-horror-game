@@ -24,7 +24,13 @@ class Level {
 	};
 
 	getCellFromXY = (x, y) => {
-		if (this.data == undefined) return null;
+        if (Array.isArray(x)) {
+            y = x[1];
+            x = x[0];
+        }
+
+		if (this.data == undefined || x == undefined || y == undefined || this.data[y] == undefined)
+            return null;
 		return this.data[y][x];
 	};
 
@@ -32,9 +38,18 @@ class Level {
 		return y * this.numRows + x;
 	};
 
-	posToXY = (pos) => {
-		return [Math.floor(pos / this.numCols), pos % this.numRows];
+	cellToXY = (cell) => {
+		return [Math.floor(cell / this.numCols), cell % this.numRows];
 	};
+
+    posToXY = (x, y) => {
+        if (Array.isArray(x)) {
+            y = x[1];
+            x = x[0];
+        }
+
+        return [Math.floor(x / this.cellWidth), Math.floor(y / this.cellHeight)]
+    }
 
     normalizeXY = (x, y) => {
         return [
@@ -49,5 +64,10 @@ class Level {
 
     normalizeY = (y) => {
         return y / this.height;
+    }
+
+    posIsSolid = (x, y) => {
+        //console.log(this.posToXY(x, y),this.getCellFromXY(this.posToXY(x, y)))
+        return !!this.getCellFromXY(this.posToXY(x, y));
     }
 }
