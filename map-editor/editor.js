@@ -18,7 +18,9 @@ let map = {
     data: []
 }
 
-let isDragging = false;
+let isPanning = false;
+let isDrawing = false;
+let placedTile = null;
 
 let selectedTileset = 0;
 let selectedTile = null;
@@ -80,28 +82,38 @@ function initMap () {
 
     mapContainer.onpointerdown = (e) => {
         if (e.button === 2 || e.shiftKey) {
-            isDragging = true;
+            isPanning = true;
         } else {
+            isDrawing = true;
+            xy = eventToXY(e)
+            placedTile = getCellFromXY(xy[0], xy[1]) === selectedTile ? null : selectedTile;
             placeTile(e);
         }
     }
 
     mapContainer.onpointerup = (e) => {
-        isDragging = false;
+        isPanning = false;
+        isDrawing = false;
     }
 
     mapContainer.onkeyup = (e) => {
-        if (!e.shiftKey) isDragging = false;
+        if (!e.shiftKey) {
+            isPanning = false;
+        }
     }
 
     mapContainer.onmouseout = (e) => {
-        isDragging = false;
+        isPanning = false;
+        placedTile = null;
     }
 
     mapContainer.onpointermove = (e) => {
-        if (isDragging) {
+        if (isPanning) {
             mapContainer.scrollLeft -= e.movementX;
             mapContainer.scrollTop -= e.movementY;
+        } else if (isDrawing) {
+            let xy = eventToXY(e);
+            if (getCellFromXY(xy[0], xy[1]) !== placedTile) placeTile(e);
         }
     }
 
@@ -141,11 +153,11 @@ function updateMap() {
 }
 
 function placeTile(e) {
-    let rect = e.target.getBoundingClientRect();
-    let x = Math.floor((e.clientX - rect.left) / map.cellWidth);
-    let y = Math.floor((e.clientY - rect.top) / map.cellHeight);
+    let xy = eventToXY(e);
+    let x = xy[0];
+    let y = xy[1];
     
-    map.data[y][x] = getCellFromXY(x, y) === selectedTile ? null : selectedTile;
+    map.data[y][x] = getCellFromXY(x, y) === placedTile ? null : placedTile;
     //console.log(map.data)
     updateMap();
 }
@@ -168,6 +180,14 @@ function drawTile(id, x, y) {
 function getCellFromXY(x, y) {
     if (map.data == undefined) return null;
     return map.data[y][x];
+}
+
+function eventToXY(e) {
+    let rect = e.target.getBoundingClientRect();
+    return [
+        Math.floor((e.clientX - rect.left) / map.cellWidth),
+        Math.floor((e.clientY - rect.top) / map.cellHeight)
+    ];
 }
 
 function xyToPos(x, y) {
