@@ -13,6 +13,7 @@ const player = new Player({
 	map: map
 });
 const SPEED = 0.8;
+const SPRINT_SPEED = 1.6;
 
 const LINE_PADDING = 10;
 const LINE_MIN_LENGTH = 20;
@@ -91,53 +92,25 @@ addEventListener("resize", () => {
 });
 
 window.onkeydown = (e) => {
+	Keys.press(e.key);
 	switch (e.key) {
-		case "w":
-			Key.press("w");
-			break;
-		case "a":
-			Key.press("a");
-			break;
-		case "s":
-			Key.press("s");
-			break;
-		case "d":
-			Key.press("d");
-			break;
 		case "ArrowLeft":
-			//camera.setZoom(camera.zoom - 0.1);
-			camera.x--;
+			camera.changeZoom(-0.1);
 			break;
 		case "ArrowRight":
-			//camera.setZoom(camera.zoom + 0.1);
-			camera.x++;
+			camera.changeZoom(0.1);
 			break;
 		case "ArrowUp":
-			//camera.setZoom(2);
-			camera.y++;
+			camera.setZoom(2);
 			break;
 		case "ArrowDown":
-			//camera.setZoom(1);
-			camera.y--;
+			camera.setZoom(1);
 			break;
 	}
 };
 
 window.onkeyup = (e) => {
-	switch(e.key) {
-		case "w":
-			Key.release("w");
-			break;
-		case "a":
-			Key.release("a");
-			break;
-		case "s":
-			Key.release("s");
-			break;
-		case "d":
-			Key.release("d");
-			break;
-	}
+	Keys.release(e.key);
 }
 
 window.onmousemove = (e) => {
@@ -189,9 +162,6 @@ function onResize() {
 function drawMap() {
 	map.cellWidth = 16; //canvas.width / map.width;
 	map.cellHeight = 16; //canvas.height / map.height;
-	let zoom = 1;
-
-	let cellSize = 16 * zoom;
 
 	if (!!map.data) {
 		//console.log(map.data)
@@ -207,11 +177,12 @@ function drawMap() {
 }
 
 function update() {
-	let h = -Key.isPressed("a") + Key.isPressed("d");
-	let v = -Key.isPressed("w") + Key.isPressed("s");
+	let h = -Keys.isPressed("a") + Keys.isPressed("d");
+	let v = -Keys.isPressed("w") + Keys.isPressed("s");
 
-	player.moveHorizontally(h * SPEED);
-	player.moveVertically(v * SPEED);
+	let spd = Keys.isPressed('Shift') ? SPRINT_SPEED : SPEED;
+	player.moveHorizontally(h * spd);
+	player.moveVertically(v * spd);
 
 	camera.setCenter(Math.floor(player.x), Math.floor(player.y));
 	//console.log(Math.floor(player.x), Math.floor(player.y))

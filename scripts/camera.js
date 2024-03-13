@@ -4,7 +4,7 @@ class Camera {
         this.y = 0;
         this.width = 160;
         this.height = 160;
-        this._zoom = 1;
+        this._zoom = 2;
         this.setLevel(level);
     }
 
@@ -14,32 +14,42 @@ class Camera {
 
     set zoom(value) {
         this._zoom = value;
-        this.width = this.level.width * value;
-        this.height = this.level.height * value;
+        console.log(1)
+        this.resizeCamera();
     }
 
     setZoom = (value) => {
         this.zoom = value;
     }
 
+    changeZoom = (delta) => {
+        this.zoom += delta;
+    }
+
     setLevel = (level) => {
         if (!level) return;
         
         this.level = level;
-        let multiplier = 2;
+        this.resizeCamera();
+    }
+
+    resizeCamera = () => {
+        if (this.level == undefined) return;
+
+        let multiplier = this.zoom;
         let aspect;
         let size = this.level.width * 2;
-        this.zoom = this.level.width / window.innerWidth * 10;
+        //this.setZoom(this.level.width / window.innerWidth * 10);
         let wider = (window.innerWidth / window.innerHeight) >= 1;
 
         if (wider) {
             aspect =  window.innerWidth / window.innerHeight;
-            this.width = (level.height / multiplier) * aspect;
-            this.height = level.height / multiplier;
+            this.width = (this.level.height / multiplier) * aspect;
+            this.height = this.level.height / multiplier;
         } else {
             aspect = window.innerHeight / window.innerWidth;
-            this.width = level.width / multiplier;
-            this.height = (level.width / multiplier) * aspect;
+            this.width = this.level.width / multiplier;
+            this.height = (this.level.width / multiplier) * aspect;
         }
     }
 
