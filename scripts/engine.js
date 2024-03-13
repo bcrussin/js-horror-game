@@ -2,6 +2,8 @@ const canvas = document.getElementById("game-canvas");
 const ctx = canvas.getContext("2d");
 const maskCanvas = document.getElementById("mask-canvas");
 const maskCtx = maskCanvas.getContext("2d");
+const tilesetImage = new Image();
+tilesetImage.src = "../tilesets/tiles.png";
 
 const renderer = new Renderer(canvas, ctx);
 const maskRenderer = new Renderer(maskCanvas, maskCtx);
@@ -57,17 +59,48 @@ let mouseY = 0;
 let leftClicked = false;
 let rightClicked = false;
 
-let loop = setInterval(() => {
-	if (leftClicked || rightClicked) {
-		for (let ray of rays) {
-			let d = ((2 * Math.PI) / 180) * 2;
-			ray.rot += d * (rightClicked ? -1 : 1);
-			ray.rot = ray.rot % (2 * Math.PI);
-		}
-	}
+let loop;
+let map;
+let camera;
+tilesetImage.onload = () => {
+	map = new Level();
+	console.log(map)
+	map.load("test").then((data) => {
+		map.data = data;
+		camera = new Camera(map);
+		renderer.setCamera(camera);
 
-	window.requestAnimationFrame(render);
-}, 1000 / FPS);
+		loop = setInterval(() => {
+			if (leftClicked || rightClicked) {
+				for (let ray of rays) {
+					let d = ((2 * Math.PI) / 180) * 2;
+					ray.rot += d * (rightClicked ? -1 : 1);
+					ray.rot = ray.rot % (2 * Math.PI);
+				}
+			}
+
+			window.requestAnimationFrame(render);
+		}, 1000 / FPS);
+	});
+};
+
+window.onkeydown = (e) => {
+	switch(e.key) {
+		case 'ArrowLeft':
+			console.log(camera.zoom)
+			camera.setZoom(camera.zoom - 0.1);
+			break;
+		case 'ArrowRight':
+			camera.setZoom(camera.zoom + 0.1);
+			break;
+		case 'ArrowUp':
+			camera.setZoom(2);
+			break;
+		case 'ArrowDown':
+			camera.setZoom(1);
+			break;
+	}
+}
 
 window.onmousemove = (e) => {
 	e.preventDefault();
@@ -77,7 +110,6 @@ window.onmousemove = (e) => {
 };
 
 window.onmousedown = (e) => {
-	console.log(e.button);
 	e.preventDefault();
 	switch (e.button) {
 		case 0:
@@ -104,6 +136,28 @@ window.onmouseup = (e) => {
 window.oncontextmenu = (e) => {
 	e.preventDefault();
 };
+
+function drawMap() {
+	map.cellWidth = 16; //canvas.width / map.width;
+	map.cellHeight = 16; //canvas.height / map.height;
+	let zoom = 1;
+
+	let cellSize = 16 * zoom;
+
+	//console.log(mouseX)
+				console.log("___")
+	if (!!map.data) {
+		//console.log(map.data)
+		for (let col = 0; col < map.numCols; col++) {
+			for (let row = 0; row < map.numRows; row++) {
+				let value = map.getCellFromXY(row, col);
+				if (value != undefined) {
+					renderer.drawTile(tilesetImage, value, row, col);
+				}
+			}
+		}
+	}
+}
 
 function render() {
 	renderer.clear("black");
@@ -146,6 +200,8 @@ function render() {
 	for (let point of pointQueue) {
 		//renderer.circle(point[0], point[1], 5, point[2]);
 	}
+
+	drawMap();
 }
 
 function renderMask(isMask = true) {

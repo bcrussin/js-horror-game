@@ -4,6 +4,31 @@ class Renderer {
 		this.ctx = context;
 	}
 
+	setCamera = (camera) => {
+		this.camera = camera;
+		//this.canvas.width = this.camera.level.width;
+		//this.canvas.height = this.camera.height;
+	}
+
+	toScreenXY = (x, y) => {
+		if (!this.camera) return null;
+		let normalized = this.camera.toCameraXY(x, y);
+		return [
+			normalized[0] * this.canvas.width,
+			normalized[1] * this.canvas.height
+		];
+	}
+
+	toScreenX = (x) => {
+		if (!this.camera) return null;
+		return this.camera.toCameraX(x) * this.canvas.width;
+	}
+
+	toScreenY = (y) => {
+		if (!this.camera) return null;
+		return this.camera.toCameraY(y) * this.canvas.height;
+	}
+
 	clear = (c) => {
 		this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.clientHeight);
 		if (!!c) this.rect(0, 0, this.canvas.width, this.canvas.height, c);
@@ -54,4 +79,48 @@ class Renderer {
 		this.ctx.arc(x, y, r, 0, 2 * Math.PI);
 		this.ctx.fill();
 	};
+
+	getTileWidth = () => {
+		//console.log(this.canvas.width, this.camera.width, this.canvas.width / this.camera.width, (this.canvas.width / this.camera.width) * this.camera.getTileWidth())
+		return (this.canvas.width / this.camera.width) * this.camera.getTileWidth();
+	}
+
+	getTileHeight= () => {
+		return (this.canvas.height / this.camera.height) * this.camera.getTileHeight();
+	}
+	
+	drawTile(image, id, x, y) {
+		this.rect(this.toScreenX(this.camera.width) - 5, this.toScreenY(this.camera.height) - 5, 10, 10, 'green')
+		//console.log(this.toScreenX(this.camera.width - 1), this.toScreenY(this.camera.height - 1), this.canvas.width)
+		let tileSize = 16;
+
+		let cellWidth = this.camera.getTileWidth();
+		let cellHeight = this.camera.getTileHeight();
+
+		let tileWidth = this.getTileWidth();
+		//console.log(cellWidth)
+		let tileHeight = this.getTileHeight();
+
+		let tilesetWidth = Math.floor(image.width / tileSize);
+		let tilesetHeight = Math.floor(image.height / tileSize);
+		let sx = Math.floor(id / tilesetHeight);
+		let sy = id % tilesetHeight;
+		if (y === 0 && false) {
+			console.log("*")
+			console.log(this.camera.level.width)
+			console.log(x * cellWidth)
+			console.log("   " + this.camera.toCameraX(x * cellWidth))
+
+		}
+		this.ctx.drawImage(
+			image, 
+			sx * tileSize, 
+			sy * tileSize, 
+			tileSize, 
+			tileSize, 
+			this.toScreenX(x * cellWidth), this.toScreenY(y * cellHeight), 
+			tileWidth, 
+			tileHeight
+		);
+	}
 }
