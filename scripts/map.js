@@ -2,8 +2,8 @@ class Level {
 	constructor() {
 		this.width = 0;
         this.height = 0;
-        this.numRows = 10;
-        this.numCols = 10;
+        this.numRows = 20;
+        this.numCols = 20;
 		this.cellWidth = 0;
 		this.cellHeight = 0;
         this.tileSize = 16;
@@ -16,8 +16,8 @@ class Level {
 				.then((res) => res.json())
 				.then((data) => {
 					this.data = data;
-                    this.width = this.numCols * this.tileSize;
-                    this.height = this.numRows * this.tileSize;
+                    this.width = data[0].length * this.tileSize;//this.numCols * this.tileSize;
+                    this.height = data.length * this.tileSize;//this.numRows * this.tileSize;
 					resolve(data);
 				});
 		});

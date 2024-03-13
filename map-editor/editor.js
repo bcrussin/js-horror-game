@@ -28,7 +28,6 @@ let selectedTile = null;
 let mapData;
 
 window.onload = function() {
-    map.data = Array.from({length: map.height}, e => Array(map.width).fill(null));
     initMap();
 }
 
@@ -76,6 +75,9 @@ function selectTile(event) {
 }
 
 function initMap () {
+    renderer.clear();
+    map.data = Array.from({length: map.height}, e => Array(map.width).fill(null));
+
     mapContainer.oncontextmenu = (e) => {
         e.preventDefault();
     }
@@ -122,9 +124,9 @@ function initMap () {
 
 function updateMap() {
     canvas.width = tileSize * zoom * map.width;
-    canvas.height = tileSize * zoom * map.width;
+    canvas.height = tileSize * zoom * map.height;
     canvas.style.width = (tileSize * zoom * map.width) + 'px';
-    canvas.style.height = (tileSize * zoom * map.width) + 'px';
+    canvas.style.height = (tileSize * zoom * map.height) + 'px';
 
     map.cellWidth = canvas.width / map.width;
     map.cellHeight = canvas.height / map.height;
@@ -150,6 +152,16 @@ function updateMap() {
     for (let i = 0; i <= map.height; i++) {
         renderer.line(0, i * cellSize, canvas.width, i * cellSize, '#ffffff80', 1);
     }
+}
+
+function changeWidth(e) {
+    map.width = prompt("Enter map width:");
+    initMap();
+}
+
+function changeHeight(e) {
+    map.height = prompt("Enter map Height:");
+    initMap();
 }
 
 function placeTile(e) {

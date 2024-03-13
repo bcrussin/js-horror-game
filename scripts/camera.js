@@ -26,11 +26,20 @@ class Camera {
         if (!level) return;
         
         this.level = level;
-        let aspect = window.innerHeight / window.innerWidth;
+        let aspect;
         let size = this.level.width * 2;
         this.zoom = this.level.width / window.innerWidth * 10;
-        this.width = size//level.width;
-        this.height = size * aspect//level.height;
+        let wider = (window.innerWidth / window.innerHeight) >= 1;
+
+        if (wider) {
+            aspect =  window.innerWidth / window.innerHeight;
+            this.width = level.height * aspect;
+            this.height = level.height / 1;
+        } else {
+            aspect = window.innerHeight / window.innerWidth;
+            this.width = level.width / 1;
+            this.height = level.width * aspect;
+        }
     }
 
     getTileWidth = () => {

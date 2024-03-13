@@ -14,12 +14,6 @@ const LINE_MIN_LENGTH = 20;
 const FPS = 60;
 const GLOBAL_LIGHTING = "10";
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-
-maskCanvas.width = canvas.width;
-maskCanvas.height = canvas.height;
-
 let pointQueue = [];
 
 let rects = [];
@@ -65,11 +59,12 @@ let camera;
 tilesetImage.onload = () => {
 	map = new Level();
 	console.log(map)
-	map.load("test").then((data) => {
+	map.load("chamber").then((data) => {
 		map.data = data;
 		camera = new Camera(map);
 		renderer.setCamera(camera);
 
+		onResize();
 		loop = setInterval(() => {
 			if (leftClicked || rightClicked) {
 				for (let ray of rays) {
@@ -84,10 +79,13 @@ tilesetImage.onload = () => {
 	});
 };
 
+addEventListener('resize', () => {
+    onResize();
+});
+
 window.onkeydown = (e) => {
 	switch(e.key) {
 		case 'ArrowLeft':
-			console.log(camera.zoom)
 			camera.setZoom(camera.zoom - 0.1);
 			break;
 		case 'ArrowRight':
@@ -137,6 +135,17 @@ window.oncontextmenu = (e) => {
 	e.preventDefault();
 };
 
+function onResize() {
+	canvas.width = window.innerWidth;
+	canvas.height = window.innerHeight;
+
+	maskCanvas.width = canvas.width;
+	maskCanvas.height = canvas.height;
+
+	// REMOVE LATER
+	camera.setLevel(camera.level);
+}
+
 function drawMap() {
 	map.cellWidth = 16; //canvas.width / map.width;
 	map.cellHeight = 16; //canvas.height / map.height;
@@ -144,8 +153,6 @@ function drawMap() {
 
 	let cellSize = 16 * zoom;
 
-	//console.log(mouseX)
-				console.log("___")
 	if (!!map.data) {
 		//console.log(map.data)
 		for (let col = 0; col < map.numCols; col++) {
