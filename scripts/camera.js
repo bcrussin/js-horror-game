@@ -5,6 +5,7 @@ class Camera {
         this.width = 160;
         this.height = 160;
         this._zoom = 2;
+        this.speed = 0.2;
         this.setLevel(level);
     }
 
@@ -68,15 +69,26 @@ class Camera {
 
     toCameraX = (x) => {
         //console.log(x, this.width, (x / this.width) - this.x)
-        return ((x - this.x) / this.width);
+        return ((x - this.x + (this.width / 2)) / this.width);
     }
 
     toCameraY = (y) => {
-        return ((y - this.y) / this.height);
+        return ((y - this.y + (this.height / 2)) / this.height);
     }
 
-    setCenter = (x, y) => {
-        this.x = x - (this.width / 2);
-        this.y = y - (this.height / 2);
+    toCameraW = (w) => {
+        return (w / this.width);
+    }
+
+    toCameraH = (h) => {
+        return (h / this.height);
+    }
+
+    toCameraLX = (l, rot) => {
+        return (l * Math.cos(rot)) / this.width;
+    }
+
+    toCameraLY = (l, rot) => {
+        return (l * Math.sin(rot)) / this.height;
     }
 }

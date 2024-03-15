@@ -62,6 +62,7 @@ let rightClicked = false;
 
 let loop;
 let camera;
+let raycaster;
 
 tilesetImage.onload = () => {
 	console.log(map);
@@ -69,6 +70,7 @@ tilesetImage.onload = () => {
 		map.data = data;
 		camera = new Camera(map);
 		renderer.setCamera(camera);
+		raycaster = new Raycaster(map);
 		player.x = camera.width / 2;
 		player.y = camera.height / 2;
 
@@ -118,6 +120,7 @@ window.onmousemove = (e) => {
 	mouseX = e.clientX;
 	mouseY = e.clientY;
 	mouseDown = e.mouseDown;
+	player.faceMouse(e, renderer.canvas);
 };
 
 window.onmousedown = (e) => {
@@ -169,7 +172,7 @@ function drawMap() {
 			for (let row = 0; row < map.numRows; row++) {
 				let value = map.getCellFromXY(row, col);
 				if (value != undefined) {
-					renderer.drawTile(tilesetImage, value, row, col);
+					renderer.tile(tilesetImage, value, row, col);
 				}
 			}
 		}
@@ -180,11 +183,15 @@ function update() {
 	let h = -Keys.isPressed("a") + Keys.isPressed("d");
 	let v = -Keys.isPressed("w") + Keys.isPressed("s");
 
-	let spd = Keys.isPressed('Shift') ? SPRINT_SPEED : SPEED;
+	let spd = Keys.isPressed('shift') ? SPRINT_SPEED : SPEED;
 	player.moveHorizontally(h * spd);
 	player.moveVertically(v * spd);
 
-	camera.setCenter(Math.floor(player.x), Math.floor(player.y));
+	player.update();
+
+	camera.x -= (camera.x - player.x) * camera.speed;
+	camera.y -= (camera.y - player.y) * camera.speed;
+	//camera.setCenter(Math.floor(player.x), Math.floor(player.y));
 	//console.log(Math.floor(player.x), Math.floor(player.y))
 	render();
 }
@@ -194,7 +201,7 @@ function render() {
 	ctx.globalCompositeOperation = "source-over";
 
 	for (let rect of rects) {
-		renderer.rect(rect.x, rect.y, rect.w, rect.h, rect.c);
+		renderer.rect(rect.x, rect.y, rect.w, rect.h, {color: rect.c});
 	}
 	//renderer.circle(e.clientX, e.clientY, 100, "#ffffff10");
 
@@ -203,7 +210,7 @@ function render() {
 	pointQueue = [];
 	ctx.globalCompositeOperation = "destination-in";
 	//ctx.filter = "blur(10px)";
-	renderMask();
+	//renderMask();
 	ctx.drawImage(maskCanvas, 0, 0);
 	ctx.filter = "none";
 
@@ -223,7 +230,7 @@ function render() {
 	ctx.filter = "none";
 
 	ctx.globalCompositeOperation = "destination-over";
-	renderer.rect(0, 0, canvas.width, canvas.height, "black");
+	renderer.rect(0, 0, canvas.width, canvas.height, {color: "black"});
 
 	// DRAW OVER EVERYTHING
 	ctx.globalCompositeOperation = "source-over";
@@ -232,13 +239,26 @@ function render() {
 	}
 
 	drawMap();
-
-	renderer.rect(player.x, player.y, 8, 8, "blue");
+	renderer.rect(player.x, player.y, 8, 8, {
+		color: "blue",
+		centered: true
+	});
+	
+	//console.log(player.xVel, player.yVel, Math.abs(player.xVel) > 0 || Math.abs(player.yVel) > 0)
+	//if (Math.abs(player.xVel) > 0 || Math.abs(player.yVel) > 0) {
+		renderer.vector(player.x, player.y, player.dir, Keys.isPressed('shift') ? 20 : 10, {
+			color: 'white'
+		});
+	//}
+	let xy = raycaster.castRay(player.x, player.y, player.dir);
+	renderer.line(player.x, player.y, xy.x[0], xy.x[1], 'green', 2)
+	renderer.line(player.x, player.y, xy.y[0], xy.y[1], 'pink', 2)
+	//renderer.rect(xy[0] * map.cellWidth, xy[1] * map.cellHeight, 2, 2, {color:'white'})
 }
 
 function renderMask(isMask = true) {
 	maskRenderer.clear();
-	if (isMask) maskRenderer.rect(0, 0, canvas.width, canvas.height, `#ffffff${GLOBAL_LIGHTING}`);
+	if (isMask) maskRenderer.rect(0, 0, canvas.width, canvas.height, {color: `#ffffff${GLOBAL_LIGHTING}`});
 	maskRenderer.circle(mouseX, mouseY, 30, "#ff888840");
 	for (ray of rays) {
 		let line = vectorToLine(mouseX, mouseY, ray.rot, ray.len);
