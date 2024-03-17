@@ -44,9 +44,10 @@ for (let i = 0; i < NUM_RAYS; i++) {
 	ray.len = Math.random() * 50 + 75;
 	rays.push(ray);
 }*/
-const NUM_RAYS = 80;
+const NUM_RAYS = 200;
+const FOV = Math.PI * 0.6;
 const START_ANGLE = -0.2 * Math.PI; //Math.random() * 2 * Math.PI;
-const FOV = 0.4 * Math.PI;
+//const FOV = 0.4 * Math.PI;
 for (let i = 0; i < NUM_RAYS; i++) {
 	let ray = {};
 	ray.rot = START_ANGLE + (i * FOV) / NUM_RAYS;
@@ -70,9 +71,10 @@ tilesetImage.onload = () => {
 		map.data = data;
 		camera = new Camera(map);
 		renderer.setCamera(camera);
+		maskRenderer.setCamera(camera);
 		raycaster = new Raycaster(map);
-		player.x = camera.width / 2;
-		player.y = camera.height / 2;
+		player.x = 82;
+		player.y = 76;
 
 		onResize();
 		loop = setInterval(() => {
@@ -170,7 +172,7 @@ function drawMap() {
 		//console.log(map.data)
 		for (let col = 0; col < map.numCols; col++) {
 			for (let row = 0; row < map.numRows; row++) {
-				let value = map.getCellFromXY(row, col);
+				let value = map.getFromXY(row, col);
 				if (value != undefined) {
 					renderer.tile(tilesetImage, value, row, col);
 				}
@@ -200,9 +202,8 @@ function render() {
 	renderer.clear("black");
 	ctx.globalCompositeOperation = "source-over";
 
-	for (let rect of rects) {
-		renderer.rect(rect.x, rect.y, rect.w, rect.h, {color: rect.c});
-	}
+	drawMap();
+	renderMask();
 	//renderer.circle(e.clientX, e.clientY, 100, "#ffffff10");
 
 	// Draw layer mask for objects
@@ -226,6 +227,7 @@ function render() {
 		});
 	}*/
 	//renderMask(false);
+	renderMask(false);
 	ctx.drawImage(maskCanvas, 0, 0);
 	ctx.filter = "none";
 
@@ -238,37 +240,55 @@ function render() {
 		//renderer.circle(point[0], point[1], 5, point[2]);
 	}
 
-	drawMap();
-	renderer.rect(player.x, player.y, 8, 8, {
+	renderer.rect(player.x, player.y, 4, 4, {
 		color: "blue",
 		centered: true
 	});
 	
 	//console.log(player.xVel, player.yVel, Math.abs(player.xVel) > 0 || Math.abs(player.yVel) > 0)
 	//if (Math.abs(player.xVel) > 0 || Math.abs(player.yVel) > 0) {
-		renderer.vector(player.x, player.y, player.dir, Keys.isPressed('shift') ? 20 : 10, {
-			color: 'white'
-		});
+	renderer.vector(player.x, player.y, player.dir, Keys.isPressed('shift') ? 20 : 10, {
+		color: 'white'
+	});
 	//}
-	let xy = raycaster.castRay(player.x, player.y, player.dir);
-	renderer.line(player.x, player.y, xy.x[0], xy.x[1], 'green', 2)
-	renderer.line(player.x, player.y, xy.y[0], xy.y[1], 'pink', 2)
+	//renderer.line(player.x, player.y, ray.y[0], ray.y[1], 'pink', 2)
+
+	/*rays[0].cy.forEach(point => {
+		if (point[2]) 
+			renderer.circle(point[0], point[1], 6, 'white');
+
+		renderer.circle(point[0], point[1], 4, '#27CE5B')
+	})
+	rays[0].cx.forEach(point => {
+		if (point[2]) renderer.circle(point[0], point[1], 6, 'blue');
+
+		renderer.circle(point[0], point[1], 4, '#FFd500')
+	})
+	rays[0].a.forEach(point => {
+		renderer.circle(point[0], point[1], 6, '#ffffff')
+	})
+	rays[0].points.forEach(point => {
+		renderer.circle(point[0], point[1], 4, 'orange')
+	})
+	rays[0].p.forEach(point => {
+		renderer.circle(point[0], point[1], 4, 'skyblue')
+	})*/
 	//renderer.rect(xy[0] * map.cellWidth, xy[1] * map.cellHeight, 2, 2, {color:'white'})
 }
 
 function renderMask(isMask = true) {
-	maskRenderer.clear();
-	if (isMask) maskRenderer.rect(0, 0, canvas.width, canvas.height, {color: `#ffffff${GLOBAL_LIGHTING}`});
-	maskRenderer.circle(mouseX, mouseY, 30, "#ff888840");
-	for (ray of rays) {
-		let line = vectorToLine(mouseX, mouseY, ray.rot, ray.len);
-		let length = lineIntersectsAnyRect(line.x1, line.y1, line.x2, line.y2);
-		maskRenderer.vector(mouseX, mouseY, ray.rot, length ?? ray.len, {
-			gradientStart: isMask ? "#ffffff20" : "#ffffff20",
-			gradientStop: "transparent",
-			thickness: 4,
-		});
+	maskRenderer.clear(isMask ? '#ffffff60' : null);
+
+	let rays = [];
+	let angle = player.dir - (FOV / 2);
+	for (let i = 0; i < NUM_RAYS; i++) {
+		angle += FOV / NUM_RAYS;
+		rays.push(raycaster.castRay(player.x, player.y, angle));
 	}
+
+	rays.forEach(ray => {
+		maskRenderer.line(player.x, player.y, ray.hit[0], ray.hit[1], '#ffffff20', 5)
+	})
 }
 
 function vectorToLine(x, y, rot, len) {

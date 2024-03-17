@@ -7,38 +7,82 @@ class Raycaster {
         this.level = level;
     }
 
-    castRay(startX, startY, rot) {
+    castRay(startX, startY, rot, options = {}) {
+        let maxDistance = options.maxDistance ?? 100;
+
+        let x = startX;
+        let y = startY;
+
         let dirX = Math.sign(Math.cos(rot));
         let dirY = Math.sign(Math.sin(rot));
 
-        let cellDX = dirX > 0 ? 1 : 0;
-        let cellDY = dirY > 0 ? 1 : 0;
+        // 1 if ray is POSITIVE on the X or Y axes, 0 otherwise
+        let isIncreasingX = dirX > 0;
+        let isIncreasingY = dirY > 0;
 
-        let rotX = Math.cos(rot);
-        let rotY = Math.sin(rot);
+        // 1 if ray is NEGATIVE on the X or Y axes, 0 otherwise
+        let isDecreasingX = (dirX <= 0) * -1;
+        let isDecreasingY = (dirY <= 0) * -1;
 
-        let cellX = Math.floor(startX / this.level.tileSize);
-        let cellY = Math.floor(startY / this.level.tileSize);
+        let cellX = Math.floor(x / this.level.tileSize);
+        let cellY = Math.floor(y / this.level.tileSize);
 
-        let xDist = [
-            (cellX + cellDX) * this.level.tileSize,
-            null
-        ]
-        xDist[1] = startY + ((xDist[0] - startX) * Math.tan(rot))
-
-        let yDist = [
-            null,
-            (cellY + cellDY) * this.level.tileSize
-        ]
-        yDist[0] = startX + ((yDist[1] - startY) / Math.tan(rot))
+        // Initialize rays to the player's current cell
+        let rayX = [cellX, cellY];
+        let rayY = [cellX, cellY];
         
-        //((startX * rotX) * ((cellX + 1) % startX)) + startX;
+        // Initial ray position calculations
+        rayX[0] = ((cellX + isIncreasingX) * this.level.tileSize);
+        rayX[1] = y + ((rayX[0] - x) * Math.tan(rot));
+        
+        rayY[1] = ((cellY + isIncreasingY) * this.level.tileSize);
+        rayY[0] = x + ((rayY[1] - y) / Math.tan(rot));
 
-        let dy = ((startY * rotY) * ((cellY + dirX) % startY)) + startY;
-        //console.log(dx)
+        while (Math.hypot(x - startX, y - startY) < maxDistance) {
+            let distX = Math.hypot(rayX[0] - x, rayX[1] - y);
+            let distY = Math.hypot(rayY[0] - x, rayY[1] - y);
+            
+            let cellXOffset = 0;
+            let cellYOffset = 0;
+
+            if(distX < distY) {
+                x = rayX[0];
+                y = rayX[1];
+
+                rayX[0] = ((cellX + dirX) * this.level.tileSize);
+                rayX[1] = y + ((rayX[0] - x) * Math.tan(rot));
+
+                cellXOffset = isDecreasingX
+            } else {
+                x = rayY[0];
+                y = rayY[1];
+                
+                rayY[1] = ((cellY + dirY) * this.level.tileSize);
+                rayY[0] = x + ((rayY[1] - y) / Math.tan(rot));
+
+                cellYOffset = isDecreasingY
+            }
+
+            // Cut line short if it becomes longer than max distance
+            if (Math.hypot(x - startX, y - startY) >= maxDistance) {
+                break;
+            }
+
+            cellX = Math.floor(x / this.level.tileSize);
+            cellY = Math.floor(y / this.level.tileSize);
+
+            if (!!this.level.getFromXY(cellX + cellXOffset, cellY + cellYOffset)) {
+                return {
+                    hit: [x, y],
+                }
+            }
+        }
+
+        x = startX + (maxDistance * Math.cos(rot));
+        y = startY + (maxDistance * Math.sin(rot));
+        
         return {
-            x: [xDist[0], xDist[1]],
-            y: [yDist[0], yDist[1]]
+            hit: [x, y],
         }
     }
 }

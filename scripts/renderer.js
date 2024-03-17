@@ -51,14 +51,16 @@ class Renderer {
 
 	clear = (c) => {
 		this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.clientHeight);
-		if (!!c) this.rect(0, 0, this.canvas.width, this.canvas.height, c);
+		if (!!c) this.rect(0, 0, this.canvas.width, this.canvas.height, { color: c, screenSpace: true });
 	};
 
 	rect = (x, y, w, h, options = {}) => {
-		x = this.toScreenX(x);
-		y = this.toScreenY(y);
-		w = this.toScreenW(w);
-		h = this.toScreenH(h);
+		if (!options.screenSpace ?? true) {
+			x = this.toScreenX(x);
+			y = this.toScreenY(y);
+			w = this.toScreenW(w);
+			h = this.toScreenH(h);
+		}
 
 		this.ctx.setTransform(1, 0, 0, 1, 0, 0);
 		this.ctx.fillStyle = options.color ?? options.c;
@@ -85,7 +87,6 @@ class Renderer {
 	};
 
 	vector = (x, y, rot, len, options = {}) => {
-
 		this.ctx.setTransform(1, 0, 0, 1, 0, 0);
 		if (options.gradientPercent == null) options.gradientPercent = 1;
 
@@ -110,6 +111,9 @@ class Renderer {
 	};
 
 	circle = (x, y, r, c) => {
+		x = this.toScreenX(x);
+		y = this.toScreenY(y);
+
 		this.ctx.setTransform(1, 0, 0, 1, 0, 0);
 		this.ctx.fillStyle = c;
 		this.ctx.beginPath();
