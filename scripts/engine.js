@@ -46,15 +46,6 @@ for (let i = 0; i < NUM_RAYS; i++) {
 }*/
 const NUM_RAYS = 200;
 const FOV = Math.PI * 0.6;
-const START_ANGLE = -0.2 * Math.PI; //Math.random() * 2 * Math.PI;
-//const FOV = 0.4 * Math.PI;
-for (let i = 0; i < NUM_RAYS; i++) {
-	let ray = {};
-	ray.rot = START_ANGLE + (i * FOV) / NUM_RAYS;
-	//ray.len = Math.random() * 20 + 400;
-	ray.len = 500;
-	rays.push(ray);
-}
 
 let leftClicked = false;
 let rightClicked = false;
@@ -190,12 +181,16 @@ function drawMap() {
 					renderer.tile(tilesetImage, value, row, col);
 				} else {
 					// TEMPORARY - RANDOMLY COLORED FLOOR TILES
-					let num = (row * (col % row)).toString(16) + (row + col).toString(16);
-					while (num.length < 6) num += num;
-					let color = "#" + num[0] + num[2] + num[3] + num[1] + num[5] + num[4];
+					let c;
+
+					if ((row + (col % 2)) % 2 == 0) {
+						c = col > (map.numCols / 2) ? 'orange' : 'blue';
+					} else {
+						c = col > (map.numCols / 2) ? 'purple' : 'green';
+					}
 					
 					renderer.rect(row * map.tileSize, col * map.tileSize, map.tileSize, map.tileSize, {
-						color: color
+						color: c
 					})
 				}
 			}
@@ -302,7 +297,9 @@ function renderMask() {
 	let angle = player.dir - (FOV / 2);
 	for (let i = 0; i < NUM_RAYS; i++) {
 		angle += FOV / NUM_RAYS;
-		rays.push(raycaster.castRay(player.x, player.y, angle));
+		rays.push(raycaster.castRay(player.x, player.y, angle, {
+			maxDistance: 150
+		}));
 	}
 
 	rays.forEach(ray => {
