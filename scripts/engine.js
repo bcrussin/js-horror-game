@@ -3,7 +3,7 @@ const ctx = canvas.getContext("2d");
 const maskCanvas = document.getElementById("mask-canvas");
 const maskCtx = maskCanvas.getContext("2d");
 const tilesetImage = new Image();
-tilesetImage.src = "../tilesets/tiles.png";
+tilesetImage.src = "/tilesets/tiles.png";
 
 const renderer = new Renderer(canvas, ctx);
 const maskRenderer = new Renderer(maskCanvas, maskCtx);
