@@ -12,6 +12,21 @@
     <canvas id="game-canvas"></canvas>
     <canvas id="mask-canvas"></canvas>
 
+    <div id="help-text" class="centered">
+        Press the 'h' key to view controls
+    </div>
+
+    <div id="help-modal">
+        <h2>How to Control</h2>
+        <div class="flex-grow">
+            <p>Use WASD keys to move player</p>
+            <p>Move mouse to point flashlight</p>
+            <p>Use left/right arrow keys to zoom in/out</p>
+            <p>Use up/down arrow keys to reset zoom</p>
+        </div>
+        <button onclick="hideHelpModal()">Close</button>
+    </div>
+
     <script src="scripts/renderer.js"></script>
     <script src="scripts/raycast.js"></script>
     <script src="scripts/map.js"></script>

@@ -8,3 +8,49 @@ body {
 #mask-canvas {
     visibility: hidden;
 }
+
+#help-text {
+    color: white;
+    opacity: 0.4;
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    transition: all 1s ease-in-out;
+}
+#help-text.centered {
+    opacity: 1;
+}
+
+#help-modal {
+    color: white;
+    visibility: hidden;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    justify-content: stretch;
+    align-items: center;
+    background-color: #333333f0;
+    padding: 8px 32px 16px 32px;
+}
+#help-modal.show {
+    visibility: visible;
+}
+#help-modal button {
+    cursor: pointer;
+    border-radius: 8px;
+    padding: 4px 12px;
+    border: none;
+    background-color: #eeeeee;
+}
+
+.flex-grow {
+    flex: 1;
+}
+
+.centered {
+    bottom: 50% !important;
+}

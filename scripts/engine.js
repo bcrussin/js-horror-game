@@ -63,6 +63,13 @@ let loop;
 let camera;
 let raycaster;
 
+let helpModal = document.getElementById('help-modal');
+let helpText = document.getElementById('help-text');
+helpText.classList.add('centered');
+setTimeout(() => {
+	helpText.classList.remove('centered');
+}, 1500);
+
 tilesetImage.onload = () => {
 	console.log(map);
 	map.load("chamber").then((data) => {
@@ -113,6 +120,13 @@ window.onkeydown = (e) => {
 
 window.onkeyup = (e) => {
 	Keys.release(e.key);
+	if (e.key == 'h') {
+		if (helpModal.classList.contains('show')) {
+			helpModal.classList.remove('show');
+		} else {
+			helpModal.classList.add('show');
+		}
+	}
 }
 
 window.onmousemove = (e) => {
@@ -147,6 +161,10 @@ window.onmouseup = (e) => {
 window.oncontextmenu = (e) => {
 	e.preventDefault();
 };
+
+function hideHelpModal() {
+	helpModal.classList.remove('show');
+}
 
 function onResize() {
 	canvas.width = window.innerWidth;
