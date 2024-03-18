@@ -12,7 +12,7 @@ class Level {
 
 	load = (levelName) => {
 		return new Promise((resolve) => {
-			fetch("../levels/" + levelName + ".json")
+			fetch("levels/" + levelName + ".json")
 				.then((res) => res.json())
 				.then((data) => {
 					this.data = data;
