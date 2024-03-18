@@ -12,8 +12,8 @@ let map = new Level();
 const player = new Player({
 	map: map
 });
-const SPEED = 0.8;
-const SPRINT_SPEED = 1.6;
+const SPEED = 0.6;
+const SPRINT_SPEED = 1;
 
 const LINE_PADDING = 10;
 const LINE_MIN_LENGTH = 20;
@@ -56,8 +56,6 @@ for (let i = 0; i < NUM_RAYS; i++) {
 	rays.push(ray);
 }
 
-let mouseX = 0;
-let mouseY = 0;
 let leftClicked = false;
 let rightClicked = false;
 
@@ -119,10 +117,7 @@ window.onkeyup = (e) => {
 
 window.onmousemove = (e) => {
 	e.preventDefault();
-	mouseX = e.clientX;
-	mouseY = e.clientY;
-	mouseDown = e.mouseDown;
-	player.faceMouse(e, renderer.canvas);
+	Mouse.update(e);
 };
 
 window.onmousedown = (e) => {
@@ -175,6 +170,15 @@ function drawMap() {
 				let value = map.getFromXY(row, col);
 				if (value != undefined) {
 					renderer.tile(tilesetImage, value, row, col);
+				} else {
+					// TEMPORARY - RANDOMLY COLORED FLOOR TILES
+					let num = (row * (col % row)).toString(16) + (row + col).toString(16);
+					while (num.length < 6) num += num;
+					let color = "#" + num[0] + num[2] + num[3] + num[1] + num[5] + num[4];
+					
+					renderer.rect(row * map.tileSize, col * map.tileSize, map.tileSize, map.tileSize, {
+						color: color
+					})
 				}
 			}
 		}
@@ -193,42 +197,38 @@ function update() {
 
 	camera.x -= (camera.x - player.x) * camera.speed;
 	camera.y -= (camera.y - player.y) * camera.speed;
-	//camera.setCenter(Math.floor(player.x), Math.floor(player.y));
-	//console.log(Math.floor(player.x), Math.floor(player.y))
+
+	player.faceMouse(Mouse.getPos(), renderer.canvas);
+	
 	render();
 }
 
 function render() {
 	renderer.clear("black");
+
+
+	// DRAW SCREEN CONTENTS
 	ctx.globalCompositeOperation = "source-over";
 
 	drawMap();
 	renderMask();
-	//renderer.circle(e.clientX, e.clientY, 100, "#ffffff10");
+
+	renderer.rect(player.x, player.y, 4, 4, {
+		color: "blue",
+		centered: true
+	});
 
 	// Draw layer mask for objects
-
-	pointQueue = [];
 	ctx.globalCompositeOperation = "destination-in";
-	//ctx.filter = "blur(10px)";
-	//renderMask();
+	
 	ctx.drawImage(maskCanvas, 0, 0);
 	ctx.filter = "none";
 
+	// DRAW MASK VISIBLY
 	ctx.globalCompositeOperation = "source-over";
 
 	ctx.filter = "blur(5px)";
-	/*for (let ray of rays) {
-		let line = vectorToLine(e.clientX, e.clientY, ray.rot, ray.len);
-		let length = lineIntersectsAnyRect(line.x1, line.y1, line.x2, line.y2);
-		renderer.vector(e.clientX, e.clientY, ray.rot, length ?? ray.len, {
-			gradientStart: "#ffffff40",
-			gradientStop: length == null ? "transparent" : "#ffffff20",
-		});
-	}*/
-	//renderMask(false);
-	renderMask(false);
-	ctx.drawImage(maskCanvas, 0, 0);
+	renderMask();
 	ctx.filter = "none";
 
 	ctx.globalCompositeOperation = "destination-over";
@@ -236,48 +236,49 @@ function render() {
 
 	// DRAW OVER EVERYTHING
 	ctx.globalCompositeOperation = "source-over";
-	for (let point of pointQueue) {
-		//renderer.circle(point[0], point[1], 5, point[2]);
-	}
-
-	renderer.rect(player.x, player.y, 4, 4, {
-		color: "blue",
-		centered: true
-	});
 	
-	//console.log(player.xVel, player.yVel, Math.abs(player.xVel) > 0 || Math.abs(player.yVel) > 0)
-	//if (Math.abs(player.xVel) > 0 || Math.abs(player.yVel) > 0) {
 	renderer.vector(player.x, player.y, player.dir, Keys.isPressed('shift') ? 20 : 10, {
 		color: 'white'
 	});
-	//}
-	//renderer.line(player.x, player.y, ray.y[0], ray.y[1], 'pink', 2)
-
-	/*rays[0].cy.forEach(point => {
-		if (point[2]) 
-			renderer.circle(point[0], point[1], 6, 'white');
-
-		renderer.circle(point[0], point[1], 4, '#27CE5B')
-	})
-	rays[0].cx.forEach(point => {
-		if (point[2]) renderer.circle(point[0], point[1], 6, 'blue');
-
-		renderer.circle(point[0], point[1], 4, '#FFd500')
-	})
-	rays[0].a.forEach(point => {
-		renderer.circle(point[0], point[1], 6, '#ffffff')
-	})
-	rays[0].points.forEach(point => {
-		renderer.circle(point[0], point[1], 4, 'orange')
-	})
-	rays[0].p.forEach(point => {
-		renderer.circle(point[0], point[1], 4, 'skyblue')
-	})*/
-	//renderer.rect(xy[0] * map.cellWidth, xy[1] * map.cellHeight, 2, 2, {color:'white'})
 }
 
-function renderMask(isMask = true) {
-	maskRenderer.clear(isMask ? '#ffffff60' : null);
+function renderMask() {
+	maskRenderer.clear();
+
+	// TEMPORARY SOLUTION TO WHITE OUT-OF-BOUNDS BACKGROUND
+
+	// Top edge
+	renderer.rect(-10000, -10000, 20000, 10000 + 2, {
+		c: 'black'
+	})
+	// Left edge
+	renderer.rect(-10000, -10000, 10000 + 2, 20000, {
+		c: 'black'
+	})
+	// Bottom edge
+	renderer.rect(-10000, map.height, 20000, 20000, {
+		c: 'black'
+	})
+	// Right edge
+	renderer.rect(map.width, -10000, 20000, 20000, {
+		c: 'black'
+	})
+
+	if (!!map.data) {
+		//console.log(map.data)
+		for (let col = 0; col < map.numCols; col++) {
+			for (let row = 0; row < map.numRows; row++) {
+				let value = map.getFromXY(row, col);
+				if (value != undefined) {
+					let dist = Math.hypot((row * map.tileSize) - player.x, (col * map.tileSize) - player.y) / 0.5;
+					let val = 255 - Math.min(dist, 255);
+					val = parseInt(val).toString(16).padStart(2, '0');
+					
+					maskRenderer.rect(row * map.tileSize, col * map.tileSize, map.tileSize, map.tileSize, {c: '#ffffff' + val});
+				}
+			}
+		}
+	}
 
 	let rays = [];
 	let angle = player.dir - (FOV / 2);
@@ -287,7 +288,7 @@ function renderMask(isMask = true) {
 	}
 
 	rays.forEach(ray => {
-		maskRenderer.line(player.x, player.y, ray.hit[0], ray.hit[1], '#ffffff20', 5)
+		maskRenderer.line(player.x, player.y, ray.hit[0], ray.hit[1], '#ffffff10', 3)
 	})
 }
 
@@ -300,87 +301,4 @@ function vectorToLine(x, y, rot, len) {
 	};
 
 	return line;
-}
-
-function lineIntersectsAnyRect(x1, y1, x2, y2) {
-	let minDist;
-	for (let object of rects) {
-		let dist = checkLineIntersect(x1, y1, x2, y2, object.x, object.y, object.w, object.h);
-		if (dist != null && (minDist == null || dist < minDist)) minDist = dist;
-	}
-
-	return minDist;
-}
-
-function checkLineIntersect(lineX1, lineY1, lineX2, lineY2, rectX, rectY, rectW, rectH) {
-	let line = {
-		x1: lineX1,
-		y1: lineY1,
-		x2: lineX2,
-		y2: lineY2,
-	};
-
-	let rect = {
-		x1: rectX,
-		y1: rectY,
-		x2: rectX + rectW,
-		y2: rectY + rectH,
-	};
-
-	let slope = (line.y2 - line.y1) / (line.x2 - line.x1);
-
-	// Completely outside.
-	if (
-		(line.x1 <= rect.x1 && line.x2 <= rect.x1) ||
-		(line.y1 <= rect.y1 && line.y2 <= rect.y1) ||
-		(line.x1 >= rect.x2 && line.x2 >= rect.x2) ||
-		(line.y1 >= rect.y2 && line.y2 >= rect.y2)
-	) {
-		return null;
-	}
-	pointQueue.push([line.x2, line.y2, "white"]);
-
-	let minDist = null;
-
-	let y = slope * (rect.x1 - line.x1) + line.y1;
-	if (y > rect.y1 && y < rect.y2) {
-		let len = getLineLength(line.x1, line.y1, rect.x1, y);
-		pointQueue.push([rect.x1, y, "blue"]);
-		if (minDist == null) {
-			minDist = len;
-		}
-	}
-
-	y = slope * (rect.x2 - line.x1) + line.y1;
-	if (y > rect.y1 && y < rect.y2) {
-		let len = getLineLength(line.x1, line.y1, rect.x2, y);
-		pointQueue.push([rect.x2, y, "red"]);
-		if (minDist == null || len < minDist) {
-			minDist = len;
-		}
-	}
-
-	let x = (rect.y1 - line.y1) / slope + line.x1; //slope * (rect.y1 - line.y1) + line.x1; //
-	if (x > rect.x1 && x < rect.x2) {
-		let len = getLineLength(line.x1, line.y1, x, rect.y1);
-		pointQueue.push([x, rect.y1, "pink"]);
-		if (minDist == null || len < minDist) {
-			minDist = len;
-		}
-	}
-
-	x = (rect.y2 - line.y1) / slope + line.x1; //slope * (rect.y2 - line.y1) + line.x1; //
-	if (x > rect.x1 && x < rect.x2) {
-		let len = getLineLength(line.x1, line.y1, x, rect.y2);
-		if (minDist == null || len < minDist) {
-			minDist = len;
-			pointQueue.push([x, rect.y2, "limegreen"]);
-		}
-	}
-
-	return minDist;
-}
-
-function getLineLength(x1, y1, x2, y2) {
-	return Math.hypot(x2 - x1, y2 - y1);
 }

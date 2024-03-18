@@ -121,6 +121,20 @@ class Renderer {
 		this.ctx.fill();
 	};
 
+	text = (string, x, y, options = {}) => {
+		if (!(options.screenSpace ?? false)) {
+			x = this.toScreenX(x);
+			y = this.toScreenY(y);
+		}
+
+		let fontSize = options.fontSize ?? 12;
+		let fontStyle = options.fontStyle ?? 'serif';
+
+		this.ctx.font = `${fontSize}px ${fontStyle}`;
+		this.ctx.fillStyle = options.color ?? 'white';
+  		this.ctx.fillText(string, x, y);
+	}
+
 	getTileWidth = () => {
 		//console.log(this.canvas.width, this.camera.width, this.canvas.width / this.camera.width, (this.canvas.width / this.camera.width) * this.camera.getTileWidth())
 		return (this.canvas.width / this.camera.width) * this.camera.level.tileSize//this.camera.getTileWidth();

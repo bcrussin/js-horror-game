@@ -36,8 +36,19 @@ class Player {
         }
     }
 
-    faceMouse = (e, canvas) => {
-        this.dir = Math.atan2(e.clientY - (canvas.height / 2), e.clientX - (canvas.width / 2))
+    faceMouse = (pos, canvas) => {
+        let target = Math.atan2(pos[1] - (canvas.height / 2), pos[0] - (canvas.width / 2));
+
+        if (target == undefined || isNaN(target)) return;
+        
+        if (this.dir - target >= Math.PI && target < this.dir)
+            target += Math.PI * 2;
+
+        if (target - this.dir >= Math.PI)
+            target -= Math.PI * 2;
+
+        this.dir += (target - this.dir) * 0.3;
+        this.dir = this.dir % (Math.PI * 2);
     }
 
     update = () => {

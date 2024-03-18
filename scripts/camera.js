@@ -4,7 +4,7 @@ class Camera {
         this.y = 0;
         this.width = 160;
         this.height = 160;
-        this._zoom = 2;
+        this._zoom = 1;
         this.speed = 0.2;
         this.setLevel(level);
     }
@@ -90,5 +90,13 @@ class Camera {
 
     toCameraLY = (l, rot) => {
         return (l * Math.sin(rot)) / this.height;
+    }
+
+    normalizeX = (x) => {
+        return x / this.width;
+    }
+
+    normalizeY = (y) => {
+        return y / this.height;
     }
 }

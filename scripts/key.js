@@ -28,3 +28,21 @@ class Keys {
         return this.pressed.has(e.toLowerCase());
     }
 }
+
+class Mouse {
+    static x = 0;
+    static y = 0;
+    static leftPressed = false;
+
+    static update = (e) => {
+        if (e == undefined) return;
+
+        this.x = e.clientX;
+        this.y = e.clientY;
+        this.leftPressed = e.mouseDown;
+    }
+
+    static getPos = () => {
+        return [this.x, this.y];
+    }
+}
