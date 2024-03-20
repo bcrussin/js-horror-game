@@ -3,6 +3,8 @@ class Player {
         this.map = data.map;
         this.x = 0;
         this.y = 0;
+        this.width = data.width ?? 0;
+        this.height = data.height ?? 0;
         this.xVel = 0;
         this.yVel = 0;
         this.dir = 0;
@@ -11,6 +13,7 @@ class Player {
     move = (dx, dy, delta) => {
         dx *= delta;
         dy *= delta;
+
         //console.log(this.x)
         let rot = Math.atan2(dy, dx);
         let dirX = Math.sign(dx);
@@ -18,8 +21,10 @@ class Player {
 
         let isGoingLeft = dirX < 0;
         let isGoingUp = dirY < 0;
-        
-        let posEnd = [this.x + dx, this.y + dy];
+
+        let startX = this.x + ((this.width * dirX) / 2);
+        let startY = this.y + ((this.height * dirY) / 2);
+        let posEnd = [startX + dx, startY + dy];
         
         let cellStart = this.map.posToXY(this.x, this.y);
         let cellEnd = this.map.posToXY(posEnd);
@@ -33,7 +38,7 @@ class Player {
             let currCell = cellStart[0] + (i * dirX)
             if (this.map.getFromXY(currCell, cellStart[1]) != undefined) {
                 let cellX = (isGoingLeft ? currCell + 1 : currCell)
-                this.x = (cellX * this.map.tileSize) - (isGoingLeft ? 0 : 0.1);
+                this.x = (cellX * this.map.tileSize) - (isGoingLeft ? 0 : 0.1) - (this.width * dirX / 2);
                 collidedX = true;
                 break;
             }
@@ -48,7 +53,7 @@ class Player {
             let currCell = cellStart[1] + (i * dirY)
             if (this.map.getFromXY(cellStart[0], currCell) != undefined) {
                 let cellY = (isGoingUp ? currCell + 1 : currCell)
-                this.y = (cellY * this.map.tileSize) - (isGoingUp ? 0 : 0.1);
+                this.y = (cellY * this.map.tileSize) - (isGoingUp ? 0 : 0.1) - (this.height * dirY / 2);
                 collidedY = true;
                 break;
             }

@@ -8,9 +8,13 @@ tilesetImage.src = "tilesets/tiles.png";
 const renderer = new Renderer(canvas, ctx);
 const maskRenderer = new Renderer(maskCanvas, maskCtx);
 
+const fpsCounter = document.getElementById("fps");
+
 let map = new Level();
 const player = new Player({
-	map: map
+	map: map,
+	width: 8,
+	height: 8
 });
 const SPEED = 0.6;
 const SPRINT_SPEED = 1;
@@ -20,8 +24,10 @@ const LINE_MIN_LENGTH = 20;
 
 const FPS = 60;
 const FPS_INTERVAL = 1000 / FPS;
-const FPS_TOLERANCE = 1;
+const FPS_TOLERANCE = 5;
+const FPS_NUM_AVERAGED = 10;
 let currFPS;
+let prevFPS = [];
 const GLOBAL_LIGHTING = "10";
 
 let pointQueue = [];
@@ -217,7 +223,13 @@ function frameUpdate(now) {
 
 	if (delta >= FPS_INTERVAL - FPS_TOLERANCE) {
 		lastFrame = now;
-		currFPS = 1000 / delta//Math.round(1000 / (l / ++frameCount) * 100) / 100;
+
+		if (prevFPS.length >= FPS_NUM_AVERAGED)
+			prevFPS.shift();
+		
+		prevFPS.push(1000 / delta);
+		currFPS = prevFPS.reduce((a, b) => a + b) / prevFPS.length;
+		fpsCounter.innerHTML = Math.round(currFPS);
 		//console.log(currFPS);
 		update(delta / (1000 / 60));
 	} else {
@@ -263,11 +275,6 @@ function render() {
 	drawMap();
 	renderMask();
 
-	renderer.rect(player.x, player.y, 4, 4, {
-		color: "blue",
-		centered: true
-	});
-
 	// Draw layer mask for objects
 	ctx.globalCompositeOperation = "destination-in";
 	
@@ -286,6 +293,11 @@ function render() {
 
 	// DRAW OVER EVERYTHING
 	ctx.globalCompositeOperation = "source-over";
+
+	renderer.rect(player.x, player.y, player.width, player.height, {
+		color: "purple",
+		centered: true
+	});
 	
 	renderer.vector(player.x, player.y, player.dir, Keys.isPressed('shift') ? 20 : 10, {
 		color: 'white'
