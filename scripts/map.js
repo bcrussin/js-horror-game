@@ -35,7 +35,7 @@ class Level {
 	};
 
 	xyToPos = (x, y) => {
-		return y * this.numRows + x;
+		return [x * this.tileSize, y * this.tileSize];
 	};
 
 	cellToXY = (cell) => {

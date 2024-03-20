@@ -19,6 +19,9 @@ const LINE_PADDING = 10;
 const LINE_MIN_LENGTH = 20;
 
 const FPS = 60;
+const FPS_INTERVAL = 1000 / FPS;
+const FPS_TOLERANCE = 1;
+let currFPS;
 const GLOBAL_LIGHTING = "10";
 
 let pointQueue = [];
@@ -44,13 +47,14 @@ for (let i = 0; i < NUM_RAYS; i++) {
 	ray.len = Math.random() * 50 + 75;
 	rays.push(ray);
 }*/
-const NUM_RAYS = 200;
+let NUM_RAYS = 200;
 const FOV = Math.PI * 0.6;
 
 let leftClicked = false;
 let rightClicked = false;
 
 let loop;
+let lastFrame;
 let camera;
 let raycaster;
 
@@ -73,17 +77,13 @@ tilesetImage.onload = () => {
 		player.y = 76;
 
 		onResize();
-		loop = setInterval(() => {
-			if (leftClicked || rightClicked) {
-				for (let ray of rays) {
-					let d = ((2 * Math.PI) / 180) * 2;
-					ray.rot += d * (rightClicked ? -1 : 1);
-					ray.rot = ray.rot % (2 * Math.PI);
-				}
-			}
+
+		lastFrame = window.performance.now();
+		frameUpdate();
+		/*loop = setInterval(() => {
 
 			window.requestAnimationFrame(update);
-		}, 1000 / FPS);
+		}, 1000 / FPS);*/
 	});
 };
 
@@ -198,20 +198,57 @@ function drawMap() {
 	}
 }
 
-function update() {
+let droppedFrames = 0;
+function frameUpdate(now) {
+	requestAnimationFrame(frameUpdate);
+	
+	let delta = now - lastFrame;
+
+	if (delta > FPS_INTERVAL * 1.5) {
+		droppedFrames++;
+
+		if (droppedFrames > 30) {
+			droppedFrames = 0;
+			NUM_RAYS = Math.round(NUM_RAYS * 0.5);
+		}
+		// console.log("FRAME DROPPED")
+		// console.log(droppedFrames, NUM_RAYS)
+	}
+
+	if (delta >= FPS_INTERVAL - FPS_TOLERANCE) {
+		lastFrame = now;
+		currFPS = 1000 / delta//Math.round(1000 / (l / ++frameCount) * 100) / 100;
+		//console.log(currFPS);
+		update(delta / (1000 / 60));
+	} else {
+		/*droppedFrames++;
+
+		if (droppedFrames > 100) {
+			droppedFrames = 0;
+			NUM_RAYS = Math.round(NUM_RAYS * 0.8);
+		}
+		console.log(droppedFrames, NUM_RAYS)*/
+	}
+}
+
+let pm;
+function update(delta) {
 	let h = -Keys.isPressed("a") + Keys.isPressed("d");
 	let v = -Keys.isPressed("w") + Keys.isPressed("s");
 
 	let spd = Keys.isPressed('shift') ? SPRINT_SPEED : SPEED;
-	player.moveHorizontally(h * spd);
-	player.moveVertically(v * spd);
+	//spd *= delta;
 
-	player.update();
+	pm = player.move(h * spd, v * spd, delta);
+	// player.moveHorizontally(h * spd, raycaster, 1);
+	// player.moveVertically(v * spd, raycaster, 1);
+
+	//player.update(delta);
 
 	camera.x -= (camera.x - player.x) * camera.speed;
 	camera.y -= (camera.y - player.y) * camera.speed;
 
-	player.faceMouse(Mouse.getPos(), renderer.canvas);
+	player.faceMouse(Mouse.getPos(), renderer.canvas, delta);
 	
 	render();
 }
@@ -297,7 +334,7 @@ function renderMask() {
 	let angle = player.dir - (FOV / 2);
 	for (let i = 0; i < NUM_RAYS; i++) {
 		angle += FOV / NUM_RAYS;
-		rays.push(raycaster.castRay(player.x, player.y, angle, {
+		rays.push(raycaster.cast(player.x, player.y, angle, {
 			maxDistance: 150
 		}));
 	}
@@ -305,6 +342,11 @@ function renderMask() {
 	rays.forEach(ray => {
 		maskRenderer.line(player.x, player.y, ray.hit[0], ray.hit[1], '#ffffff10', 3)
 	})
+
+	// maskRenderer.rect(0, 0, canvas.width, canvas.height, {
+	// 	color: 'white',
+	// 	screenSpace: true
+	// })
 }
 
 function vectorToLine(x, y, rot, len) {

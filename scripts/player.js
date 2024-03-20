@@ -8,35 +8,83 @@ class Player {
         this.dir = 0;
     }
 
-    moveHorizontally = (delta) => {
-        let offset = delta / Math.abs(delta);
+    move = (dx, dy, delta) => {
+        dx *= delta;
+        dy *= delta;
+        //console.log(this.x)
+        let rot = Math.atan2(dy, dx);
+        let dirX = Math.sign(dx);
+        let dirY = Math.sign(dy);
+
+        let isGoingLeft = dirX < 0;
+        let isGoingUp = dirY < 0;
         
-        //console.log(this.map.posIsSolid(this.x + delta, this.y))
-        if (this.map.posIsSolid(this.x + delta, this.y)) {
-            if (delta > 0) {
+        let posEnd = [this.x + dx, this.y + dy];
+        
+        let cellStart = this.map.posToXY(this.x, this.y);
+        let cellEnd = this.map.posToXY(posEnd);
+
+
+        let collidedX = false;
+        let collidedY = false;
+
+        // Calculate the number of cells travelled, then check each one in the direction of movement
+        for (let i = 0; i <= Math.abs(cellEnd[0] - cellStart[0]); i++) {
+            let currCell = cellStart[0] + (i * dirX)
+            if (this.map.getFromXY(currCell, cellStart[1]) != undefined) {
+                let cellX = (isGoingLeft ? currCell + 1 : currCell)
+                this.x = (cellX * this.map.tileSize) - (isGoingLeft ? 0 : 0.1);
+                collidedX = true;
+                break;
+            }
+        }
+
+        if (!collidedX) {
+            this.x += dx;
+        }
+
+        // Calculate the number of cells travelled, then check each one in the direction of movement
+        for (let i = 0; i <= Math.abs(cellEnd[1] - cellStart[1]); i++) {
+            let currCell = cellStart[1] + (i * dirY)
+            if (this.map.getFromXY(cellStart[0], currCell) != undefined) {
+                let cellY = (isGoingUp ? currCell + 1 : currCell)
+                this.y = (cellY * this.map.tileSize) - (isGoingUp ? 0 : 0.1);
+                collidedY = true;
+                break;
+            }
+        }
+
+        if (!collidedY) {
+            this.y += dy;
+        }
+    }
+
+    moveHorizontally = (speed, raycaster, delta) => {
+        if (this.map.posIsSolid(this.x + (speed * delta), this.y)) {
+            if (speed > 0) {
                 this.xVel = (Math.ceil((this.x) / this.map.cellWidth) * this.map.cellWidth - 0.1) - this.x// - 1
             } else {
-                this.xVel = (Math.floor((this.x) / this.map.cellWidth) * this.map.cellWidth) - this.x// + 1
+                this.xVel = (Math.floor((this.x) / this.map.cellWidth) * this.map.cellWidth + 0.1) - this.x// + 1
             }
             // - (delta / Math.abs(delta));
         } else {
-            this.xVel = delta;
+            this.xVel = speed;
         }
     }
 
-    moveVertically = (delta) => {
-        if (this.map.posIsSolid(this.x, this.y + delta)) {
-            if (delta > 0) {
+    moveVertically = (speed, delta) => {
+        if (this.map.posIsSolid(this.x, this.y + (speed * delta))) {
+            if (speed > 0) {
                 this.yVel = (Math.ceil((this.y) / this.map.cellHeight) * this.map.cellHeight - 0.1) - this.y;// - (delta / Math.abs(delta));
             } else {
-                this.yVel = (Math.floor((this.y) / this.map.cellHeight) * this.map.cellHeight) - this.y;// - (delta / Math.abs(delta));
+                this.yVel = (Math.floor((this.y) / this.map.cellHeight) * this.map.cellHeight + 0.1) - this.y;// - (delta / Math.abs(delta));
             }
         } else {
-            this.yVel = delta;
+            this.yVel = speed;
         }
     }
 
-    faceMouse = (pos, canvas) => {
+    faceMouse = (pos, canvas, delta = 1) => {
         let target = Math.atan2(pos[1] - (canvas.height / 2), pos[0] - (canvas.width / 2));
 
         if (target == undefined || isNaN(target)) return;
@@ -47,12 +95,12 @@ class Player {
         if (target - this.dir >= Math.PI)
             target -= Math.PI * 2;
 
-        this.dir += (target - this.dir) * 0.3;
+        this.dir += (target - this.dir) * (delta * 0.3);
         this.dir = this.dir % (Math.PI * 2);
     }
 
-    update = () => {
-        this.x += this.xVel;
-        this.y += this.yVel;
+    update = (delta) => {
+        this.x += this.xVel * delta;
+        this.y += this.yVel * delta;
     }
 }

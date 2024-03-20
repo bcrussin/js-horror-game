@@ -7,7 +7,7 @@ class Raycaster {
         this.level = level;
     }
 
-    castRay(startX, startY, rot, options = {}) {
+    cast(startX, startY, rot, options = {}) {
         let maxDistance = options.maxDistance ?? 100;
 
         let x = startX;
@@ -74,6 +74,7 @@ class Raycaster {
             if (!!this.level.getFromXY(cellX + cellXOffset, cellY + cellYOffset)) {
                 return {
                     hit: [x, y],
+                    collision: true
                 }
             }
         }
@@ -83,6 +84,7 @@ class Raycaster {
         
         return {
             hit: [x, y],
+            collision: false
         }
     }
 }
