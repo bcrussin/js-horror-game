@@ -37,6 +37,7 @@ let prevFPS = [];
 const GLOBAL_LIGHTING = "10";
 
 let pointQueue = [];
+let flashlightDistance = 150;
 
 let rects = [];
 const NUM_RECTS = 4;
@@ -91,6 +92,7 @@ tilesetImage.onload = () => {
 		onResize();
 
 		lastFrame = window.performance.now();
+		flickerLight();
 		frameUpdate();
 		/*loop = setInterval(() => {
 
@@ -340,7 +342,7 @@ function renderMask() {
 	for (let i = 0; i < NUM_RAYS; i++) {
 		angle += FOV / NUM_RAYS;
 		let ray = raycaster.cast(player.x, player.y, angle, {
-			maxDistance: 150
+			maxDistance: flashlightDistance
 		});
 		rays.push(ray);
 		if(!!ray.hitCell) {
@@ -362,8 +364,9 @@ function renderMask() {
 				let value = map.getFromXY(row, col);
 				if (value != undefined) {
 					let dist = Math.hypot((row * map.tileSize) - player.x, (col * map.tileSize) - player.y) * 3;
-					dist = 255 - Math.min(dist, 255)
-					dist += lighting[[row, col].toString()] ?? 50;
+
+					dist = 180 - Math.min(dist, 180)
+					dist += lighting[[row, col].toString()] ?? 0;
 					if(dist == undefined) continue;
 					let val = Math.min(dist, 255);
 					val = parseInt(val).toString(16).padStart(2, '0');
@@ -378,6 +381,24 @@ function renderMask() {
 	// 	color: 'white',
 	// 	screenSpace: true
 	// })
+}
+
+let NUM_FLICKERS = 4;
+let flickerInterval = 5000;
+let flickerNum = 0;
+function flickerLight() {
+	if (flickerNum < NUM_FLICKERS) {
+		flashlightDistance = flashlightDistance == 0 ? 150 : 0;
+		flickerInterval = (Math.random() * 30) + 20;
+		flickerNum++;
+	} else {
+		flashlightDistance = 150;
+		flickerInterval = (Math.random() * 5000) + 2000;
+		flickerNum = 0;
+		NUM_FLICKERS = parseInt((Math.random() * 3) + 2)
+	}
+
+	setTimeout(flickerLight, flickerInterval);
 }
 
 function vectorToLine(x, y, rot, len) {
