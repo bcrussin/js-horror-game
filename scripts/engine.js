@@ -228,6 +228,7 @@ function frameUpdate(now) {
 		// console.log(droppedFrames, NUM_RAYS)
 	}
 
+
 	if (delta >= FPS_INTERVAL - FPS_TOLERANCE) {
 		lastFrame = now;
 
@@ -237,8 +238,10 @@ function frameUpdate(now) {
 		prevFPS.push(1000 / delta);
 		currFPS = prevFPS.reduce((a, b) => a + b) / prevFPS.length;
 		fpsCounter.innerHTML = Math.round(currFPS);
-		//console.log(currFPS);
+
 		update(delta / (1000 / 60));
+		render();
+		//console.log(currFPS);
 	} else {
 		/*droppedFrames++;
 
@@ -268,8 +271,6 @@ function update(delta) {
 	camera.y -= (camera.y - player.y) * camera.speed;
 
 	player.faceMouse(Mouse.getPos(), renderer.canvas, delta);
-	
-	render();
 }
 
 function render() {

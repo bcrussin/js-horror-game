@@ -138,7 +138,7 @@ class Player {
         if (target - this.dir >= Math.PI)
             target -= Math.PI * 2;
 
-        this.dir += (target - this.dir) * (delta * 0.3);
+        this.dir += (target - this.dir) * Math.min(delta * 0.3, 1);
         this.dir = this.dir % (Math.PI * 2);
     }
 
