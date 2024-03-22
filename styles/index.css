@@ -55,6 +55,17 @@ body {
     background-color: #eeeeee;
 }
 
+.modal-options {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+.modal-options > * {
+    margin-left: 4px;
+    margin-right: 4px;
+}
+
 .flex-grow {
     flex: 1;
 }

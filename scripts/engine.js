@@ -330,7 +330,8 @@ function renderMask() {
 	}
 
 	rays.forEach(ray => {
-		maskRenderer.line(player.x, player.y, ray.hit[0], ray.hit[1], '#ffffff10', 4)
+		let thickness = Math.min(Math.max(400 - NUM_RAYS, 1) / 50, 6);
+		maskRenderer.line(player.x, player.y, ray.hit[0], ray.hit[1], '#ffffff10', Math.round(thickness))
 	})
 
 	// Light cells depending on raycast and proximity
@@ -394,4 +395,10 @@ function vectorToLine(x, y, rot, len) {
 	};
 
 	return line;
+}
+
+function changeNumRays() {
+	let num = prompt("INSERT NUMBER OF RAYS TO CAST\n(Warning: Experimental)\n\nLower = better performance,\n Higher = smoother flashlight, brighter overall\n\nCurrent: " + NUM_RAYS + "\nDefault: 200");
+	if (num != undefined && num !== '') NUM_RAYS = num;
+	hideHelpModal();
 }
