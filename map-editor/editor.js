@@ -3,7 +3,9 @@ const tilesetImage = new Image();
 const mapContainer = document.getElementById('map-container');
 const canvas = document.getElementById('map-canvas');
 const ctx = canvas.getContext('2d');
-const renderer = new Renderer(canvas, ctx);
+const renderer = new Renderer(canvas, ctx, {
+    screenSpace: true
+});
 
 let tileSize = 16;
 let tilesetWidth;
@@ -212,12 +214,12 @@ function posToXY(pos) {
 
 function zoomOut() {
     zoom--;
-    initMap();
+    updateMap();
 }
 
 function zoomIn() {
     zoom++;
-    initMap();
+    updateMap();
 }
 
 function saveMap() {

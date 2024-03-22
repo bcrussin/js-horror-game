@@ -1,13 +1,14 @@
 class Level {
-	constructor() {
+	constructor(options = {}) {
 		this.width = 0;
         this.height = 0;
-        this.numRows = 20;
-        this.numCols = 20;
 		this.cellWidth = 0;
 		this.cellHeight = 0;
         this.tileSize = 16;
 		this.data = [];
+
+        this.numRows = null;
+        this.numCols = null;
 	}
 
 	load = (levelName) => {
@@ -16,8 +17,13 @@ class Level {
 				.then((res) => res.json())
 				.then((data) => {
 					this.data = data;
-                    this.width = data[0].length * this.tileSize;//this.numCols * this.tileSize;
-                    this.height = data.length * this.tileSize;//this.numRows * this.tileSize;
+
+                    this.width = data[0].length * this.tileSize;
+                    this.height = data.length * this.tileSize;
+
+                    this.numRows = data[0].length;
+                    this.numCols = data.length;
+
 					resolve(data);
 				});
 		});
@@ -75,7 +81,6 @@ class Level {
     }
 
     posIsSolid = (x, y) => {
-        //console.log(this.posToXY(x, y),this.getFromXY(this.posToXY(x, y)))
         return !!this.getFromXY(this.posToXY(x, y));
     }
 }

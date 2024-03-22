@@ -13,11 +13,11 @@ const fpsCounter = document.getElementById("fps");
 let map = new Level();
 const player = new Player({
 	map: map,
-	width: 8,
-	height: 8
+	width: 12,
+	height: 12
 });
-const SPEED = 0.6;
-const SPRINT_SPEED = 1;
+const SPEED = 0.6 * 1.6;
+const SPRINT_SPEED = 1 * 1.6;
 
 const LINE_PADDING = 10;
 const LINE_MIN_LENGTH = 20;
@@ -53,13 +53,6 @@ for (let i = 0; i < NUM_RECTS; i++) {
 }
 
 let rays = [];
-/*const NUM_RAYS = 100;
-for (let i = 0; i < NUM_RAYS; i++) {
-	let ray = {};
-	ray.rot = (i * (2 * Math.PI)) / NUM_RAYS;
-	ray.len = Math.random() * 50 + 75;
-	rays.push(ray);
-}*/
 let NUM_RAYS = 200;
 const FOV = Math.PI * 0.6;
 
@@ -80,9 +73,12 @@ setTimeout(() => {
 
 tilesetImage.onload = () => {
 	console.log(map);
-	map.load("chamber").then((data) => {
+	map.load("large_map").then((data) => {
 		map.data = data;
-		camera = new Camera(map);
+		camera = new Camera({
+			level: map,
+			zoom: 2
+		});
 		renderer.setCamera(camera);
 		maskRenderer.setCamera(camera);
 		raycaster = new Raycaster(map);
@@ -92,12 +88,8 @@ tilesetImage.onload = () => {
 		onResize();
 
 		lastFrame = window.performance.now();
-		flickerLight();
 		frameUpdate();
-		/*loop = setInterval(() => {
-
-			window.requestAnimationFrame(update);
-		}, 1000 / FPS);*/
+		//flickerLight();
 	});
 };
 
@@ -223,11 +215,8 @@ function frameUpdate(now) {
 
 		if (droppedFrames > 30) {
 			droppedFrames = 0;
-			//NUM_RAYS = Math.round(NUM_RAYS * 0.5);
 			setFPS(FPS - 5);
 		}
-		// console.log("FRAME DROPPED")
-		// console.log(droppedFrames, NUM_RAYS)
 	}
 
 
@@ -243,30 +232,16 @@ function frameUpdate(now) {
 
 		update(delta / (1000 / 60));
 		render();
-		//console.log(currFPS);
-	} else {
-		/*droppedFrames++;
-
-		if (droppedFrames > 100) {
-			droppedFrames = 0;
-			NUM_RAYS = Math.round(NUM_RAYS * 0.8);
-		}
-		console.log(droppedFrames, NUM_RAYS)*/
 	}
 }
 
-let pm;
 function update(delta) {
 	let h = -Keys.isPressed("a") + Keys.isPressed("d");
 	let v = -Keys.isPressed("w") + Keys.isPressed("s");
 
 	let spd = Keys.isPressed('shift') ? SPRINT_SPEED : SPEED;
-	//spd *= delta;
 
-	pm = player.move(h * spd, v * spd, delta);
-	// player.moveHorizontally(h * spd, raycaster, 1);
-	// player.moveVertically(v * spd, raycaster, 1);
-
+	player.move(h * spd, v * spd, delta);
 	//player.update(delta);
 
 	camera.x -= (camera.x - player.x) * camera.speed;
@@ -283,6 +258,11 @@ function render() {
 	ctx.globalCompositeOperation = "source-over";
 
 	drawMap();
+
+	renderer.rect(player.x, player.y, player.width, player.height, {
+		color: "#222222",
+		centered: true
+	});
 	renderMask();
 
 	// Draw layer mask for objects
@@ -303,15 +283,11 @@ function render() {
 
 	// DRAW OVER EVERYTHING
 	ctx.globalCompositeOperation = "source-over";
-
-	renderer.rect(player.x, player.y, player.width, player.height, {
-		color: "purple",
-		centered: true
-	});
 	
-	renderer.vector(player.x, player.y, player.dir, Keys.isPressed('shift') ? 20 : 10, {
-		color: 'white'
-	});
+	// Draw line in direction of flashlight
+	// renderer.vector(player.x, player.y, player.dir, Keys.isPressed('shift') ? 20 : 10, {
+	// 	color: 'white'
+	// });
 }
 
 function renderMask() {
@@ -357,6 +333,7 @@ function renderMask() {
 		maskRenderer.line(player.x, player.y, ray.hit[0], ray.hit[1], '#ffffff10', 4)
 	})
 
+	// Light cells depending on raycast and proximity
 	if (!!map.data) {
 		//console.log(map.data)
 		for (let col = 0; col < map.numCols; col++) {
@@ -365,7 +342,7 @@ function renderMask() {
 				if (value != undefined) {
 					let dist = Math.hypot((row * map.tileSize) - player.x, (col * map.tileSize) - player.y) * 3;
 
-					dist = 180 - Math.min(dist, 180)
+					dist = 255 - Math.min(dist, 255)
 					dist += lighting[[row, col].toString()] ?? 0;
 					if(dist == undefined) continue;
 					let val = Math.min(dist, 255);
@@ -377,6 +354,13 @@ function renderMask() {
 		}
 	}
 
+	// Always show player
+	maskRenderer.rect(player.x, player.y, player.width, player.height, {
+		color: '#ffffff80',
+		centered: true
+	})
+
+	// Disable lighting, show everything
 	// maskRenderer.rect(0, 0, canvas.width, canvas.height, {
 	// 	color: 'white',
 	// 	screenSpace: true
@@ -384,7 +368,7 @@ function renderMask() {
 }
 
 let NUM_FLICKERS = 4;
-let flickerInterval = 5000;
+let flickerInterval = 10000;
 let flickerNum = 0;
 function flickerLight() {
 	if (flickerNum < NUM_FLICKERS) {
@@ -393,7 +377,7 @@ function flickerLight() {
 		flickerNum++;
 	} else {
 		flashlightDistance = 150;
-		flickerInterval = (Math.random() * 5000) + 2000;
+		flickerInterval = (Math.random() * 10000) + 5000;
 		flickerNum = 0;
 		NUM_FLICKERS = parseInt((Math.random() * 3) + 2)
 	}
