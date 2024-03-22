@@ -14,6 +14,9 @@ class Player {
         dx *= delta;
         dy *= delta;
 
+        let halfWidth = this.width / 2;
+        let halfHeight = this.height / 2;
+
         //console.log(this.x)
         let rot = Math.atan2(dy, dx);
         let dirX = Math.sign(dx);
@@ -22,44 +25,79 @@ class Player {
         let isGoingLeft = dirX < 0;
         let isGoingUp = dirY < 0;
 
-        let startX = this.x + ((this.width * dirX) / 2);
-        let startY = this.y + ((this.height * dirY) / 2);
-        let posEnd = [startX + dx, startY + dy];
+        let startX = this.x// + (halfWidth * dirX);
+        let startY = this.y// + (halfHeight * dirY);
+
+        let ex = startX + dx;
+        let ey = startY + dy;
+        let posEnd = [];
+        posEnd.push([ex - halfWidth, ey - halfHeight]);
+        posEnd.push([ex + halfWidth, ey - halfHeight]);
+        posEnd.push([ex - halfWidth, ey + halfHeight]);
+        posEnd.push([ex + halfWidth, ey + halfHeight]);
         
-        let cellStart = this.map.posToXY(this.x, this.y);
-        let cellEnd = this.map.posToXY(posEnd);
+        let cellStart = [];
+        cellStart.push(this.map.posToXY(this.x - halfWidth, this.y - halfHeight));
+        cellStart.push(this.map.posToXY(this.x + halfWidth, this.y - halfHeight));
+        cellStart.push(this.map.posToXY(this.x - halfWidth, this.y + halfHeight));
+        cellStart.push(this.map.posToXY(this.x + halfWidth, this.y + halfHeight));
+
+        let cellEnd = [];
+        posEnd.forEach(pos => cellEnd.push(this.map.posToXY(pos)));
 
 
-        let collidedX = false;
-        let collidedY = false;
+        let collidedX = null;
+        let collidedY = null;
 
         // Calculate the number of cells travelled, then check each one in the direction of movement
-        for (let i = 0; i <= Math.abs(cellEnd[0] - cellStart[0]); i++) {
-            let currCell = cellStart[0] + (i * dirX)
-            if (this.map.getFromXY(currCell, cellStart[1]) != undefined) {
-                let cellX = (isGoingLeft ? currCell + 1 : currCell)
-                this.x = (cellX * this.map.tileSize) - (isGoingLeft ? 0 : 0.1) - (this.width * dirX / 2);
-                collidedX = true;
-                break;
+        for (let cell = 0; cell < cellStart.length; cell++) {
+            let currStart = cellStart[cell];
+            let currEnd = cellEnd[cell];
+
+            for (let i = 0; i <= Math.abs(currEnd[0] - currStart[0]); i++) {
+                let currCell = currStart[0] + (i * dirX)
+                if (this.map.getFromXY(currCell, currStart[1]) != undefined) {
+                    if (collidedX == undefined || collidedX.distance < i) {
+                        collidedX = {
+                            distance: i,
+                            cell: currCell
+                        };
+                    }
+                    break;
+                }
             }
         }
 
-        if (!collidedX) {
+        // Calculate the number of cells travelled, then check each one in the direction of movement
+        for (let cell = 0; cell < cellStart.length; cell++) {
+            let currStart = cellStart[cell];
+            let currEnd = cellEnd[cell];
+
+            for (let i = 0; i <= Math.abs(currEnd[1] - currStart[1]); i++) {
+                let currCell = currStart[1] + (i * dirY)
+                if (this.map.getFromXY(currStart[0], currCell) != undefined) {
+                    if (collidedY == undefined || collidedY.distance < i) {
+                        collidedY = {
+                            distance: i,
+                            cell: currCell
+                        };
+                    }
+                    break;
+                }
+            }
+        }
+
+        if (!!collidedX) {
+            let cellX = (isGoingLeft ? collidedX.cell + 1 : collidedX.cell)
+            this.x = (cellX * this.map.tileSize) - (isGoingLeft ? 0 : 0.1) - (halfWidth * dirX);
+        } else {
             this.x += dx;
         }
 
-        // Calculate the number of cells travelled, then check each one in the direction of movement
-        for (let i = 0; i <= Math.abs(cellEnd[1] - cellStart[1]); i++) {
-            let currCell = cellStart[1] + (i * dirY)
-            if (this.map.getFromXY(cellStart[0], currCell) != undefined) {
-                let cellY = (isGoingUp ? currCell + 1 : currCell)
-                this.y = (cellY * this.map.tileSize) - (isGoingUp ? 0 : 0.1) - (this.height * dirY / 2);
-                collidedY = true;
-                break;
-            }
-        }
-
-        if (!collidedY) {
+        if (!!collidedY) {
+            let cellY = (isGoingUp ? collidedY.cell + 1 : collidedY.cell)
+            this.y = (cellY * this.map.tileSize) - (isGoingUp ? 0 : 0.1) - (halfHeight * dirY);
+        } else {
             this.y += dy;
         }
     }
