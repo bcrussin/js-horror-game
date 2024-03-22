@@ -74,7 +74,9 @@ class Raycaster {
             if (!!this.level.getFromXY(cellX + cellXOffset, cellY + cellYOffset)) {
                 return {
                     hit: [x, y],
-                    collision: true
+                    hitCell: [cellX + cellXOffset, cellY + cellYOffset],
+                    collision: true,
+                    strength: Math.sqrt((maxDistance * maxDistance) - (Math.hypot(x - startX, y - startY) * Math.hypot(x - startX, y - startY))) * 0.5
                 }
             }
         }
@@ -84,7 +86,9 @@ class Raycaster {
         
         return {
             hit: [x, y],
-            collision: false
+            hitCell: null,
+            collision: false,
+            strength: null
         }
     }
 }

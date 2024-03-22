@@ -58,7 +58,7 @@ body {
     bottom: 50% !important;
 }
 
-#fps-counter {
+.top-left {
     position: fixed;
     top: 8px;
     left: 8px;

@@ -22,8 +22,14 @@ const SPRINT_SPEED = 1;
 const LINE_PADDING = 10;
 const LINE_MIN_LENGTH = 20;
 
-const FPS = 60;
-const FPS_INTERVAL = 1000 / FPS;
+let FPS = 60;
+let FPS_INTERVAL = 1000 / FPS;
+
+function setFPS(fps) {
+	FPS = fps;
+	FPS_INTERVAL = 1000 / FPS;
+}
+
 const FPS_TOLERANCE = 5;
 const FPS_NUM_AVERAGED = 10;
 let currFPS;
@@ -79,8 +85,8 @@ tilesetImage.onload = () => {
 		renderer.setCamera(camera);
 		maskRenderer.setCamera(camera);
 		raycaster = new Raycaster(map);
-		player.x = 82;
-		player.y = 76;
+		player.x = 32;
+		player.y = 32;
 
 		onResize();
 
@@ -215,7 +221,8 @@ function frameUpdate(now) {
 
 		if (droppedFrames > 30) {
 			droppedFrames = 0;
-			NUM_RAYS = Math.round(NUM_RAYS * 0.5);
+			//NUM_RAYS = Math.round(NUM_RAYS * 0.5);
+			setFPS(FPS - 5);
 		}
 		// console.log("FRAME DROPPED")
 		// console.log(droppedFrames, NUM_RAYS)
@@ -326,14 +333,38 @@ function renderMask() {
 		c: 'black'
 	})
 
+	let rays = [];
+	let lighting = {};
+	let angle = player.dir - (FOV / 2);
+	for (let i = 0; i < NUM_RAYS; i++) {
+		angle += FOV / NUM_RAYS;
+		let ray = raycaster.cast(player.x, player.y, angle, {
+			maxDistance: 150
+		});
+		rays.push(ray);
+		if(!!ray.hitCell) {
+			if (!!lighting[ray.hitCell.toString()])
+				lighting[ray.hitCell.toString()] += ray.strength * 0.3;
+			else
+				lighting[ray.hitCell.toString()] = ray.strength * 0.4;
+		}
+	}
+
+	rays.forEach(ray => {
+		maskRenderer.line(player.x, player.y, ray.hit[0], ray.hit[1], '#ffffff10', 4)
+	})
+
 	if (!!map.data) {
 		//console.log(map.data)
 		for (let col = 0; col < map.numCols; col++) {
 			for (let row = 0; row < map.numRows; row++) {
 				let value = map.getFromXY(row, col);
 				if (value != undefined) {
-					let dist = Math.hypot((row * map.tileSize) - player.x, (col * map.tileSize) - player.y) / 0.5;
-					let val = 255 - Math.min(dist, 255);
+					let dist = Math.hypot((row * map.tileSize) - player.x, (col * map.tileSize) - player.y) * 3;
+					dist = 255 - Math.min(dist, 255)
+					dist += lighting[[row, col].toString()] ?? 50;
+					if(dist == undefined) continue;
+					let val = Math.min(dist, 255);
 					val = parseInt(val).toString(16).padStart(2, '0');
 					
 					maskRenderer.rect(row * map.tileSize, col * map.tileSize, map.tileSize, map.tileSize, {c: '#ffffff' + val});
@@ -341,19 +372,6 @@ function renderMask() {
 			}
 		}
 	}
-
-	let rays = [];
-	let angle = player.dir - (FOV / 2);
-	for (let i = 0; i < NUM_RAYS; i++) {
-		angle += FOV / NUM_RAYS;
-		rays.push(raycaster.cast(player.x, player.y, angle, {
-			maxDistance: 150
-		}));
-	}
-
-	rays.forEach(ray => {
-		maskRenderer.line(player.x, player.y, ray.hit[0], ray.hit[1], '#ffffff10', 3)
-	})
 
 	// maskRenderer.rect(0, 0, canvas.width, canvas.height, {
 	// 	color: 'white',
