@@ -100,14 +100,14 @@ class Player {
         // Update x and y positions
 		if (!!collidedX) {
 			let cellX = isGoingLeft ? collidedX.cell + 1 : collidedX.cell;
-			this.x = cellX * this.map.tileSize - (isGoingLeft ? 0 : 0.1) - halfWidth * dirX;
+			this.x = cellX * this.map.tileSize - (isGoingLeft ? 0 : 0.01) - halfWidth * dirX;
 		} else {
 			this.x += dx;
 		}
 
 		if (!!collidedY) {
 			let cellY = isGoingUp ? collidedY.cell + 1 : collidedY.cell;
-			this.y = cellY * this.map.tileSize - (isGoingUp ? 0 : 0.1) - halfHeight * dirY;
+			this.y = cellY * this.map.tileSize - (isGoingUp ? 0 : 0.01) - halfHeight * dirY;
 		} else {
 			this.y += dy;
 		}
