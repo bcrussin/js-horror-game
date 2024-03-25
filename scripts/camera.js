@@ -15,7 +15,7 @@ class Camera {
 
     set zoom(value) {
         this._zoom = value;
-        this.resizeCamera();
+        this.resize();
     }
 
     setZoom = (value) => {
@@ -30,10 +30,10 @@ class Camera {
         if (!level) return;
         
         this.level = level;
-        this.resizeCamera();
+        this.resize();
     }
 
-    resizeCamera = () => {
+    resize = () => {
         if (this.level == undefined) return;
 
         let multiplier = this.zoom;

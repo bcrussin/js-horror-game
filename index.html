@@ -17,10 +17,21 @@
     </div>
 
     <div id="help-text" class="centered">
-        Press the 'h' key to view controls
+        Press escape or 'p' to pause game
     </div>
 
-    <div id="help-modal">
+    <div id="pause-modal" class="modal">
+        <h2>Game Paused</h2>
+
+        <div class="modal-options vertical">
+            <button onclick="showModal('help')">Controls</button>
+            <button onclick="showModal('changelog')">Changelog</button>
+            <button onclick="changeNumRays()">Graphics Settings</button>
+            <button onclick="hideAllModals()">Close</button>
+        </div>
+    </div>
+
+    <div id="help-modal" class="modal">
         <h2>Controls</h2>
         <div class="flex-grow">
             <p>Use WASD keys to move player</p>
@@ -29,11 +40,21 @@
             <p>Use up/down arrow keys to reset zoom</p>
         </div>
         <div class="modal-options">
-            <button onclick="changeNumRays()">Graphics Settings</button>
-            <button onclick="hideHelpModal()">Close</button>
+            <button onclick="hideModal('help')">Close</button>
         </div>
     </div>
 
+    <div id="changelog-modal" class="modal">
+        <h2>What's New</h2>
+
+        <div id="changelog-content"></div>
+        <div class="modal-options">
+            <button><a href="version-history/version-history.html" target="_blank">View Version History</a></button>
+            <button onclick="hideModal('help')">Close</button>
+        </div>
+    </div>
+    
+    <script src="version-history/version-history.js"></script>
     <script src="scripts/renderer.js"></script>
     <script src="scripts/raycast.js"></script>
     <script src="scripts/level.js"></script>

@@ -1,0 +1,20 @@
+{
+    "current": "0.1.1",
+    "versions": {
+        "0.1.1": {
+            "title": "Implement Version History",
+            "description": "Added the ability to view current and past versions and any changes they implemented",
+            "changes": [
+                "Created version-changes.json to contain information for all released versions",
+                "Reorganized modal structure to allow the creation of multiple pop-up dialogs",
+                "Created front-end for viewing version history and most recent changes",
+                "Game pauses when a modal is open"
+            ]
+        },
+        "0.1.0": {
+            "title": "Basic Engine",
+            "description": "The initial foundation on which the game will be built. Implements a map editor and a basic raycasting engine.",
+            "changes": []
+        }
+    }
+}
