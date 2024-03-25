@@ -82,12 +82,10 @@ setTimeout(() => {
 }, 1500);
 
 tilesetImage.onload = () => {
-	console.log(map);
-	map.load("large_map").then((data) => {
-		map.data = data;
+	map.load("layered_map").then((data) => {
 		camera = new Camera({
 			level: map,
-			zoom: 2,
+			zoom: 0.5,
 		});
 		renderer.setCamera(camera);
 		maskRenderer.setCamera(camera);
@@ -186,8 +184,8 @@ function drawMap() {
 	map.cellWidth = 16; //canvas.width / map.width;
 	map.cellHeight = 16; //canvas.height / map.height;
 
-	if (!!map.data) {
-		//console.log(map.data)
+	if (!!map.tiles) {
+		//console.log(map.tiles)
 		for (let col = 0; col < map.numCols; col++) {
 			for (let row = 0; row < map.numRows; row++) {
 				let value = map.getFromXY(row, col);
@@ -376,11 +374,11 @@ function renderMask(includeTiles = true) {
 	if (!includeTiles) return;
 
 	// Light cells depending on raycast and proximity
-	if (!!map.data) {
-		//console.log(map.data)
+	if (!!map.tiles) {
+		//console.log(map.tiles)
 		for (let col = 0; col < map.numCols; col++) {
 			for (let row = 0; row < map.numRows; row++) {
-				let value = map.getFromXY(row, col);
+				let value = map.getWallFromXY(row, col);
 				if (value != undefined) {
 					let dist = Math.hypot(row * map.tileSize - player.x, col * map.tileSize - player.y) * 3;
 

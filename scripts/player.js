@@ -66,7 +66,7 @@ class Player {
 
 			for (let i = 0; i <= Math.abs(currEnd[0] - currStart[0]); i++) {
 				let currCell = currStart[0] + i * dirX;
-				if (this.map.getFromXY(currCell, currStart[1]) != undefined) {
+				if (this.map.getWallFromXY(currCell, currStart[1]) != undefined) {
 					if (collidedX == undefined || collidedX.distance < i) {
 						collidedX = {
 							distance: i,
@@ -85,7 +85,7 @@ class Player {
 
 			for (let i = 0; i <= Math.abs(currEnd[1] - currStart[1]); i++) {
 				let currCell = currStart[1] + i * dirY;
-				if (this.map.getFromXY(currStart[0], currCell) != undefined) {
+				if (this.map.getWallFromXY(currStart[0], currCell) != undefined) {
 					if (collidedY == undefined || collidedY.distance < i) {
 						collidedY = {
 							distance: i,

@@ -10,14 +10,16 @@ This results in a gameplay loop involving peeking around corners to illuminate r
 
 ### Version 0.1
 
-#### Tile Metadata (v0.1.1)
+#### Layered Maps & Lighting (v0.1.1)
 
 - [ ] Update player velocity in `move` function, then update position in `update` function
-- [ ] Implement tile metadata
-  - [ ] Mark tiles as solid or not solid (for lighting engine and collision)
-  - [ ] Update map with non-solid tiles to act as floor
+- [ ] Implement multi-layered maps
+  - [x] Treat background layers as not solid (for lighting engine and collision)
+  - [ ] Create lighting layer for sources of light
 - [ ] Store map metadata along with tile data in file
-  - Map height/weight, etc.
+  - [x] Map height/width
+  - [ ] Initial zoom level
+  - [ ] Player size
 - [ ] Add other light sources to map
 
 #### Initial Engine (v0.1.0)

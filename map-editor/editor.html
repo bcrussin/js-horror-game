@@ -30,7 +30,13 @@
             </div>
 
             <div id="tilemap-container">
-                <h2>Tiles</h2>
+                <div class="split-container">
+                    <h2>Tiles</h2>
+                    <select id="layer-select" onchange="changeLayer(event.target.value)">
+                        <option value="walls">Walls</option>
+                        <option value="background">Background</option>
+                    </select>
+                </div>
                 <div id="tileset">
                 </div>
             </div>

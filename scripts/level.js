@@ -5,7 +5,7 @@ class Level {
 		this.cellWidth = 0;
 		this.cellHeight = 0;
         this.tileSize = 16;
-		this.data = [];
+		this.tiles = [];
 
         this.numRows = null;
         this.numCols = null;
@@ -16,29 +16,42 @@ class Level {
 			fetch("levels/" + levelName + ".json")
 				.then((res) => res.json())
 				.then((data) => {
-					this.data = data;
+                    console.log(data)
+					this.tiles = data.tiles;
 
-                    this.width = data[0].length * this.tileSize;
-                    this.height = data.length * this.tileSize;
+                    this.numRows = data.height ?? data.tiles.walls[0].length;
+                    this.numCols = data.width ?? data.tiles.walls.length;
 
-                    this.numRows = data[0].length;
-                    this.numCols = data.length;
+                    this.width = this.numCols * this.tileSize;
+                    this.height = this.numRows * this.tileSize;
+
 
 					resolve(data);
 				});
 		});
 	};
 
-	getFromXY = (x, y) => {
+	getFromXY = (x, y, layer) => {
         if (Array.isArray(x)) {
             y = x[1];
             x = x[0];
         }
 
-		if (this.data == undefined || x == undefined || y == undefined || this.data[y] == undefined)
+		if (this.tiles == undefined || x == undefined || y == undefined)
             return null;
-		return this.data[y][x];
+		
+        if (x < 0 || x >= this.numCols || y < 0 || y >= this.numRows)
+            return null;
+        
+        if (layer != undefined)
+            return this.tiles[layer][y][x];
+
+        return this.tiles.walls[y][x] ?? this.tiles.background[y][x];
 	};
+
+    getWallFromXY = (x, y) => {
+        return this.getFromXY(x, y, 'walls');
+    }
 
 	xyToPos = (x, y) => {
 		return [x * this.tileSize, y * this.tileSize];

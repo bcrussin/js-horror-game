@@ -1,5 +1,5 @@
 const tilesetContainer = document.getElementById('tileset');
-const tilesetImage = new Image();
+const layerSelector = document.getElementById('layer-select');
 const mapContainer = document.getElementById('map-container');
 const canvas = document.getElementById('map-canvas');
 const ctx = canvas.getContext('2d');
@@ -12,12 +12,17 @@ let tilesetWidth;
 let tilesetHeight;
 let zoom = 4;
 
+let selectedLayer = layerSelector.value;
+
 let map = {
     width: 10,
     height: 10,
     cellWidth: 0,
     cellHeight: 0,
-    data: []
+    tiles: {
+        walls: [],
+        background: []
+    }
 }
 
 let isPanning = false;
@@ -33,14 +38,22 @@ window.onload = function() {
     initMap();
 }
 
-tilesetImage.onload = function() {
+const tilesets = {
+    walls: new Image(),
+    background: new Image()
+}
+
+tilesets.walls.onload = function() {
     getTiles();
 }
-tilesetImage.src = "../tilesets/tiles.png"
+
+Object.values(tilesets).forEach(tileset => {
+    tileset.src = '../tilesets/tiles.png';
+})
 
 function getTiles() {
-    tilesetWidth = Math.floor(tilesetImage.width / tileSize);
-    tilesetHeight = Math.floor(tilesetImage.height / tileSize);
+    tilesetWidth = Math.floor(tilesets.walls.width / tileSize);
+    tilesetHeight = Math.floor(tilesets.walls.height / tileSize);
 
     for (let i = 0; i < tilesetWidth; i++) {
         for (let j = 0; j < tilesetHeight; j++) {
@@ -52,7 +65,7 @@ function getTiles() {
 
             tilesetContainer.appendChild(tileImage);
     
-            tileCtx.drawImage(tilesetImage, i * tileSize, j * tileSize, tileSize, tileSize, 0, 0, tileImage.width, tileImage.height);
+            tileCtx.drawImage(tilesets.walls, i * tileSize, j * tileSize, tileSize, tileSize, 0, 0, tileImage.width, tileImage.height);
             tileCtx.fillStyle = 'white';
             tileCtx.font = '40pt sans-serif';
             tileCtx.fillText(tileImage.id, 5, 145);
@@ -78,7 +91,8 @@ function selectTile(event) {
 
 function initMap () {
     renderer.clear();
-    map.data = Array.from({length: map.height}, e => Array(map.width).fill(null));
+    map.tiles.walls = Array.from({length: map.height}, e => Array(map.width).fill(null));
+    map.tiles.background = Array.from({length: map.height}, e => Array(map.width).fill(null));
 
     mapContainer.oncontextmenu = (e) => {
         e.preventDefault();
@@ -124,6 +138,11 @@ function initMap () {
     updateMap();
 }
 
+function changeLayer(layer) {
+    selectedLayer = layer;
+    updateMap();
+}
+
 function updateMap() {
     canvas.width = tileSize * zoom * map.width;
     canvas.height = tileSize * zoom * map.height;
@@ -136,13 +155,20 @@ function updateMap() {
     renderer.clear();
     let cellSize = tileSize * zoom;
 
-    if (!!map.data) {
-        //console.log(map.data)
+    if (map.tiles == undefined) return;
+    
+    if (!!map.tiles.walls) {
+        //console.log(map.tiles)
         for (let col = 0; col < map.height; col++) {
             for (let row = 0; row < map.width; row++) {
-                let value = getCellFromXY(row, col);
+                let value = getCellFromXY(row, col, 'background');
                 if (value != undefined) {
-                    drawTile(value, row, col);
+                    drawTile(value, row, col, 'background');
+                }
+
+                value = getCellFromXY(row, col, 'walls');
+                if (value != undefined) {
+                    drawTile(value, row, col, 'walls');
                 }
             }
         }
@@ -171,16 +197,18 @@ function placeTile(e) {
     let x = xy[0];
     let y = xy[1];
     
-    map.data[y][x] = getCellFromXY(x, y) === placedTile ? null : placedTile;
-    //console.log(map.data)
+    map.tiles[selectedLayer][y][x] = getCellFromXY(x, y) === placedTile ? null : placedTile;
+    //console.log(map.tiles)
     updateMap();
 }
 
-function drawTile(id, x, y) {
+function drawTile(id, x, y, layer = selectedLayer) {
     let sx = Math.floor(id / tilesetHeight);
     let sy = id % tilesetHeight;
+    
+    ctx.globalAlpha = layer == selectedLayer ? 1 : 0.4;
     ctx.drawImage(
-        tilesetImage, 
+        tilesets.walls, 
         sx * tileSize, 
         sy * tileSize, 
         tileSize, 
@@ -189,11 +217,14 @@ function drawTile(id, x, y) {
         map.cellWidth, 
         map.cellHeight
     );
+    ctx.globalAlpha = 1;
 }
 
-function getCellFromXY(x, y) {
-    if (map.data == undefined) return null;
-    return map.data[y][x];
+function getCellFromXY(x, y, layer = selectedLayer) {
+    if (map.tiles[layer] == undefined) return null;
+    if (y >= map.tiles[layer].length || x >= map.tiles[layer][0].length) return null;
+
+    return map.tiles[layer][y][x];
 }
 
 function eventToXY(e) {
@@ -223,7 +254,13 @@ function zoomIn() {
 }
 
 function saveMap() {
-    let data = new Blob([JSON.stringify(map.data)], {type: 'text/json'});
+    let output = {
+        width: map.width,
+        height: map.height,
+        tiles: map.tiles
+    }
+
+    let data = new Blob([JSON.stringify(output)], {type: 'text/json'});
     let elem = document.createElement('a');
     elem.setAttribute('href', window.URL.createObjectURL(data));
     elem.setAttribute('download', 'map.json');
@@ -238,9 +275,12 @@ function loadMap() {
 
     elem.addEventListener('change', (e) => {
         let fr = new FileReader();
-        fr.onload = function(e) { 
-          map.data = JSON.parse(e.target.result);
-          updateMap();
+        fr.onload = function(e) {
+            let data = JSON.parse(e.target.result);
+            map.width = data.width;
+            map.height = data.height;
+            map.tiles = data.tiles;
+            updateMap();
         }
       
         fr.readAsText(e.target.files[0]);

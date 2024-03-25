@@ -71,7 +71,7 @@ class Raycaster {
             cellX = Math.floor(x / this.level.tileSize);
             cellY = Math.floor(y / this.level.tileSize);
 
-            if (!!this.level.getFromXY(cellX + cellXOffset, cellY + cellYOffset)) {
+            if (!!this.level.getWallFromXY(cellX + cellXOffset, cellY + cellYOffset)) {
                 return {
                     hit: [x, y],
                     hitCell: [cellX + cellXOffset, cellY + cellYOffset],
