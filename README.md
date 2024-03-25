@@ -10,7 +10,7 @@ This results in a gameplay loop involving peeking around corners to illuminate r
 
 ### Version 0.1
 
-#### Tile Metadata (v0.1.1)
+#### Tile Metadata (v0.1.2)
 
 - [ ] Update player velocity in `move` function, then update position in `update` function
 - [ ] Implement tile metadata
