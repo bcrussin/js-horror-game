@@ -489,7 +489,7 @@ function hideAllModals() {
 function loadChangelogModal() {
 	if (isChangelogLoaded) return;
 
-	loadChangelog(true).then(changelog => {
+	loadChangelog('', true).then(changelog => {
 		changelogContent.innerHTML = changelog
 	});
 }

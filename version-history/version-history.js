@@ -1,12 +1,12 @@
 const versionsContainer = document.getElementById("versions-container");
 
 window.addEventListener("load", () => {
-	loadChangelog();
+	loadChangelog('../');
 });
 
-function loadChangelog(onlyCurrent) {
+function loadChangelog(path, onlyCurrent) {
 	return new Promise((resolve) => {
-		fetch("version-history.json")
+		fetch((path ?? '') + "version-history.json")
 			.then((res) => res.json())
 			.then((data) => {
                 let changelog = parseChangelog(data, onlyCurrent);
