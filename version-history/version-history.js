@@ -42,15 +42,16 @@ function parseChangelog(data, onlyCurrent) {
 		title.innerHTML = titleText;
 
 		let description = document.createElement("p");
-		description.innerHTML = version.description;
+		description.innerHTML = version.description ?? '';
 
         let changesLabel = document.createElement('p');
         changesLabel.innerHTML = "Changes:";
         changesLabel.style.marginBottom = '0';
 
 		let changesList = document.createElement("ul");
+        let hasChanges = !!version.changes && version.changes.length > 0;
 
-		if (!!version.changes && version.changes.length > 0) {
+		if (hasChanges) {
 			for (changeText of version.changes) {
 				let change = document.createElement("li");
 				change.innerHTML = changeText;
@@ -62,8 +63,12 @@ function parseChangelog(data, onlyCurrent) {
 
 		container.appendChild(title);
 		container.append(description);
-        container.appendChild(changesLabel);
-		container.appendChild(changesList);
+		
+        if (hasChanges) {
+            container.appendChild(changesLabel);
+            container.appendChild(changesList);
+        }
+        
         if (!onlyCurrent) {
             let hr = document.createElement('hr');
             container.appendChild(hr);
