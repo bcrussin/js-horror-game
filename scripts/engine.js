@@ -493,38 +493,3 @@ function loadChangelogModal() {
 		changelogContent.innerHTML = changelog
 	});
 }
-
-/*function loadChangelog() {
-	if (isChangelogLoaded) return;
-
-	fetch("version-history.json")
-		.then((res) => res.json())
-		.then((data) => {
-			changelogContent.innerHTML = "";
-
-			console.log(data)
-			let version = data.versions[data.current];
-
-			let title = document.createElement('h4');
-			title.innerHTML = `v${data.current} - ${version.title}`;
-
-			let description = document.createElement('p');
-			description.innerHTML = version.description;
-
-			let changesList = document.createElement('ul');
-
-			if (!!version.changes && version.changes.length > 0) {
-
-				for (changeText of version.changes) {
-					let change = document.createElement('li');
-					change.innerHTML = changeText;
-
-					changesList.appendChild(change);
-				}
-			}
-
-			changelogContent.appendChild(title);
-			changelogContent.append(description);
-			changelogContent.appendChild(changesList);
-		});
-}*/

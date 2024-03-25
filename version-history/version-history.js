@@ -6,7 +6,7 @@ window.addEventListener("load", () => {
 
 function loadChangelog(onlyCurrent) {
 	return new Promise((resolve) => {
-		fetch("/version-history.json")
+		fetch("version-history.json")
 			.then((res) => res.json())
 			.then((data) => {
                 let changelog = parseChangelog(data, onlyCurrent);
