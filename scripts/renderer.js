@@ -5,6 +5,11 @@ class Renderer {
 		this.screenSpace = options.screenSpace ?? false;
 	}
 
+	setCanvasAndContext = (canvas, context) => {
+		this.canvas = canvas;
+		this.ctx = context;
+	}
+
 	setCamera = (camera) => {
 		this.camera = camera;
 		//this.canvas.width = this.camera.level.width;

@@ -45,6 +45,7 @@ const FPS_NUM_AVERAGED = 10;
 let currFPS;
 let prevFPS = [];
 const GLOBAL_LIGHTING = "10";
+let isDebug = false;
 
 let pointQueue = [];
 let flashlightDistance = 150;
@@ -81,6 +82,7 @@ setTimeout(() => {
 	helpText.classList.remove("centered");
 }, 1500);
 
+
 tilesetImage.onload = () => {
 	map.load("layered_lighted_map").then((data) => {
 		camera = new Camera({
@@ -93,7 +95,7 @@ tilesetImage.onload = () => {
 		player.x = 32;
 		player.y = 32;
 
-		canvas.style.display = 'block';
+		console.log(isDebug)
 
 		onResize();
 
@@ -218,6 +220,7 @@ function drawMap() {
 let droppedFrames = 0;
 function frameUpdate(now) {
 	requestAnimationFrame(frameUpdate);
+	window.scrollTo(0, 0)
 
 	let delta = now - lastFrame;
 
@@ -351,6 +354,12 @@ function renderMask(includeTiles = true) {
 	renderer.rect(map.width, -10000, 20000, 20000, {
 		c: "black",
 	});
+
+	maskCtx.filter = "blur(20px)";
+	maskRenderer.circle(player.x, player.y, player.width * 4, '#ffffffc0', {
+		centered: true
+	})
+	maskCtx.filter = "none";
 
 	let rays = [];
 	let lighting = {};
@@ -516,11 +525,13 @@ function loadChangelogModal() {
 }
 
 function toggleMaskView() {
-	if (canvas.style.display != 'block') {
+	if (isDebug) {
 		canvas.style.display = 'block';
 		maskCanvas.style.visibility = 'hidden';
+		isDebug = false;
 	} else {
 		canvas.style.display = 'none';
 		maskCanvas.style.visibility = 'visible';
+		isDebug = true;
 	}
 }

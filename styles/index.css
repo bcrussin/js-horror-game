@@ -23,6 +23,10 @@ button > a {
     padding: 4px 12px;
 }
 
+canvas {
+    image-rendering: pixelated;
+}
+
 #mask-canvas {
     visibility: hidden;
 }
