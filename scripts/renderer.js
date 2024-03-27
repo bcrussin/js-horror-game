@@ -19,22 +19,22 @@ class Renderer {
 
 	toScreenX = (x) => {
 		if (!this.camera) return null;
-		return this.camera.toCameraX(x) * this.canvas.width;
+		return Math.floor(this.camera.toCameraX(x) * this.canvas.width);
 	};
 
 	toScreenY = (y) => {
 		if (!this.camera) return null;
-		return this.camera.toCameraY(y) * this.canvas.height;
+		return Math.floor(this.camera.toCameraY(y) * this.canvas.height);
 	};
 
 	toScreenW = (w) => {
 		if (!this.camera) return null;
-		return this.camera.toCameraW(w) * this.canvas.width;
+		return Math.ceil(this.camera.toCameraW(w) * this.canvas.width);
 	};
 
 	toScreenH = (h) => {
 		if (!this.camera) return null;
-		return this.camera.toCameraH(h) * this.canvas.height;
+		return Math.ceil(this.camera.toCameraH(h) * this.canvas.height);
 	};
 
 	toScreenLX = (l, rot) => {
@@ -110,14 +110,26 @@ class Renderer {
 		this.ctx.stroke();
 	};
 
-	circle = (x, y, r, c) => {
-		x = this.toScreenX(x);
-		y = this.toScreenY(y);
+	circle = (x, y, r, c, options = {}) => {
+		let rx = r / 2;
+		let ry = r / 2;
 
+		if (!!options.offset) {
+			x += rx / 4;
+			y += ry / 4;
+		}
+
+		if (!this.isScreenSpace(options.screenSpace)) {
+			x = this.toScreenX(x);
+			y = this.toScreenY(y);
+			rx = this.toScreenW(rx);
+			ry = this.toScreenW(ry);
+		}
+		
 		this.ctx.setTransform(1, 0, 0, 1, 0, 0);
 		this.ctx.fillStyle = c;
 		this.ctx.beginPath();
-		this.ctx.arc(x, y, r, 0, 2 * Math.PI);
+		this.ctx.ellipse(x, y, rx, ry, 0, 0, 2 * Math.PI);
 		this.ctx.fill();
 	};
 
@@ -136,27 +148,45 @@ class Renderer {
 	};
 
 	getTileWidth = () => {
-		return (this.canvas.width / this.camera.width) * this.camera.level.tileSize; //this.camera.getTileWidth();
+		return Math.ceil((this.canvas.width / this.camera.width) * this.camera.level.tileSize) + 2; //this.camera.getTileWidth();
 	};
 
 	getTileHeight = () => {
-		return (this.canvas.height / this.camera.height) * this.camera.level.tileSize; //this.camera.getTileHeight();
+		return Math.ceil((this.canvas.height / this.camera.height) * this.camera.level.tileSize) + 2; //this.camera.getTileHeight();
 	};
 
-	tile(image, id, x, y) {
+	tile(image, id, x, y, options = {}) {
+		options = this.parseOptions(options);
+
 		let tileSize = this.camera.level.tileSize;
 
 		let cellWidth = this.camera.getTileWidth();
 		let cellHeight = this.camera.getTileHeight();
 
-		let tileWidth = this.getTileWidth();
-		//console.log(cellWidth)
-		let tileHeight = this.getTileHeight();
+		let sizeModifier = 1;
+		if (!!(options.convertToGrid ?? true)) {
+			sizeModifier *= tileSize;
+		}
 
-		let tilesetWidth = Math.floor(image.width / tileSize);
+		let tileWidth = options.width ? this.toScreenW(options.width) : this.getTileWidth();
+		let tileHeight = options.height ? this.toScreenH(options.height) : this.getTileHeight();
+
 		let tilesetHeight = Math.floor(image.height / tileSize);
 		let sx = Math.floor(id / tilesetHeight);
 		let sy = id % tilesetHeight;
+
+
+
+		x *= sizeModifier;
+		y *= sizeModifier;
+		if (!options.isScreenSpace) {
+			x = this.toScreenX(x);
+			y = this.toScreenY(y);
+		}
+		if (!!options.centered) {
+			x -= tileWidth / 2;
+			y -= tileHeight / 2;
+		}
 
 		this.ctx.drawImage(
 			image,
@@ -164,11 +194,30 @@ class Renderer {
 			sy * tileSize,
 			tileSize,
 			tileSize,
-			this.toScreenX(x * tileSize),
-			this.toScreenY(y * tileSize),
+			x,
+			y,
 			tileWidth,
 			tileHeight
 		);
+
+		this.cleanup();
+	}
+
+	parseOptions = (options = {}) => {
+		let opacity = options.opacity ?? 1;
+		this.ctx.globalAlpha = opacity;
+
+		let isScreenSpace = this.isScreenSpace(options.screenSpace);
+
+		let output = options;
+		output.opacity = opacity;
+		output.isScreenSpace = isScreenSpace;
+
+		return output;
+	}
+
+	cleanup = () => {
+		this.ctx.globalAlpha = 1;
 	}
 
 	isScreenSpace = (option) => {

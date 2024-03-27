@@ -21,8 +21,8 @@ const modals = {
 let map = new Level();
 const player = new Player({
 	map: map,
-	width: 12,
-	height: 12,
+	width: 14,
+	height: 14,
 });
 const SPEED = 0.6 * 1.6;
 const SPRINT_SPEED = 1 * 1.6;
@@ -65,7 +65,7 @@ for (let i = 0; i < NUM_RECTS; i++) {
 let rays = [];
 const DEFAULT_NUM_RAYS = 500;
 let NUM_RAYS = DEFAULT_NUM_RAYS;
-const FOV = Math.PI * 0.6;
+const FOV = Math.PI * 0.4;
 
 let leftClicked = false;
 let rightClicked = false;
@@ -82,16 +82,18 @@ setTimeout(() => {
 }, 1500);
 
 tilesetImage.onload = () => {
-	map.load("layered_map").then((data) => {
+	map.load("layered_lighted_map").then((data) => {
 		camera = new Camera({
 			level: map,
-			zoom: 0.5,
+			zoom: 2,
 		});
 		renderer.setCamera(camera);
 		maskRenderer.setCamera(camera);
 		raycaster = new Raycaster(map);
 		player.x = 32;
 		player.y = 32;
+
+		canvas.style.display = 'block';
 
 		onResize();
 
@@ -132,6 +134,9 @@ window.onkeyup = (e) => {
 		case "Escape":
 		case "p":
 			toggleModal("pause");
+			break;
+		case "/":
+			toggleMaskView();
 			break;
 	}
 };
@@ -286,12 +291,18 @@ function render() {
 	ctx.closePath();
 	ctx.clip();*/
 
-	renderMask();
 	drawMap();
+	renderMask();
 
-	renderer.rect(player.x, player.y, player.width, player.height, {
+	/*renderer.rect(player.x, player.y, player.width, player.height, {
 		color: "#222222",
 		centered: true,
+	});*/
+	renderer.tile(tilesetImage, 111, player.x, player.y, {
+		convertToGrid: false,
+		centered: true,
+		width: player.width,
+		height: player.height
 	});
 	//renderMask();
 
@@ -358,7 +369,7 @@ function renderMask(includeTiles = true) {
 
 	maskCtx.filter = "blur(5px)";
 	//maskRenderer.filter = 'blur(50px)'
-	maskCtx.fillStyle = includeTiles ? "#ffffff80" : "#FBC02D60";
+	maskCtx.fillStyle = includeTiles ? "#ffffffa0" : "#FBC02D60";
 	maskCtx.beginPath();
 	maskCtx.moveTo(renderer.toScreenX(player.x), renderer.toScreenY(player.y));
 	rays.forEach((ray) => {
@@ -390,14 +401,26 @@ function renderMask(includeTiles = true) {
 
 					maskRenderer.rect(row * map.tileSize, col * map.tileSize, map.tileSize, map.tileSize, { c: "#ffffff" + val });
 				}
+
+				let lightValue = map.getLightFromXY(row, col);
+				if (lightValue != undefined) {
+					maskCtx.filter = "blur(15px)";
+					maskRenderer.circle(row * map.tileSize, col * map.tileSize, lightValue.radius * map.tileSize, 'white', {
+						offset: true
+					})
+					maskCtx.filter = "none";
+				}
 			}
 		}
 	}
 
 	// Always show player
-	maskRenderer.rect(player.x, player.y, player.width, player.height, {
-		color: "#ffffff80",
+	maskRenderer.tile(tilesetImage, 111, player.x, player.y, {
+		opacity: 0.4,
+		convertToGrid: false,
 		centered: true,
+		width: player.width,
+		height: player.height
 	});
 
 	// Disable lighting, show everything
@@ -490,4 +513,14 @@ function loadChangelogModal() {
 	loadChangelog('', true).then(changelog => {
 		changelogContent.innerHTML = changelog
 	});
+}
+
+function toggleMaskView() {
+	if (canvas.style.display != 'block') {
+		canvas.style.display = 'block';
+		maskCanvas.style.visibility = 'hidden';
+	} else {
+		canvas.style.display = 'none';
+		maskCanvas.style.visibility = 'visible';
+	}
 }

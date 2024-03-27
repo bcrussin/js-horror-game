@@ -13,6 +13,7 @@ let tilesetHeight;
 let zoom = 4;
 
 let selectedLayer = layerSelector.value;
+let selectedCategory = 'tiles';
 
 let map = {
     width: 10,
@@ -21,7 +22,10 @@ let map = {
     cellHeight: 0,
     tiles: {
         walls: [],
-        background: []
+        background: [],
+    },
+    entities: {
+        lights: []
     }
 }
 
@@ -91,8 +95,13 @@ function selectTile(event) {
 
 function initMap () {
     renderer.clear();
-    map.tiles.walls = Array.from({length: map.height}, e => Array(map.width).fill(null));
-    map.tiles.background = Array.from({length: map.height}, e => Array(map.width).fill(null));
+
+    Object.keys(map.tiles).forEach(layer => {
+        map.tiles[layer] = Array.from({length: map.height}, e => Array(map.width).fill(null));
+    });
+    Object.keys(map.entities).forEach(layer => {
+        map.entities[layer] = Array.from({length: map.height}, e => Array(map.width).fill(null));
+    });
 
     mapContainer.oncontextmenu = (e) => {
         e.preventDefault();
@@ -104,8 +113,12 @@ function initMap () {
         } else {
             isDrawing = true;
             xy = eventToXY(e)
-            placedTile = getCellFromXY(xy[0], xy[1]) === selectedTile ? null : selectedTile;
-            placeTile(e);
+            if (selectedLayer == 'lights')
+                placedTile = getCellFromXY(xy[0], xy[1]) == undefined ? 1 : null;
+            else
+                placedTile = getCellFromXY(xy[0], xy[1]) === selectedTile ? null : selectedTile;
+
+            placeSelected(e);
         }
     }
 
@@ -131,7 +144,7 @@ function initMap () {
             mapContainer.scrollTop -= e.movementY;
         } else if (isDrawing) {
             let xy = eventToXY(e);
-            if (getCellFromXY(xy[0], xy[1]) !== placedTile) placeTile(e);
+            if (getCellFromXY(xy[0], xy[1]) !== placedTile && selectedCategory === 'tiles') placeTile(e);
         }
     }
 
@@ -139,6 +152,16 @@ function initMap () {
 }
 
 function changeLayer(layer) {
+    switch(layer) {
+        case 'lights':
+            selectedCategory = 'entities';
+            break;
+        case 'background':
+        case 'walls':
+            selectedCategory = 'tiles';
+            break;
+    }
+
     selectedLayer = layer;
     updateMap();
 }
@@ -159,8 +182,8 @@ function updateMap() {
     
     if (!!map.tiles.walls) {
         //console.log(map.tiles)
-        for (let col = 0; col < map.height; col++) {
-            for (let row = 0; row < map.width; row++) {
+        for (let row = 0; row < map.height; row++) {
+            for (let col = 0; col < map.width; col++) {
                 let value = getCellFromXY(row, col, 'background');
                 if (value != undefined) {
                     drawTile(value, row, col, 'background');
@@ -169,6 +192,11 @@ function updateMap() {
                 value = getCellFromXY(row, col, 'walls');
                 if (value != undefined) {
                     drawTile(value, row, col, 'walls');
+                }
+
+                value = getEntityFromXY(row, col, 'lights');
+                if (value != undefined) {
+                    renderer.circle(row * map.cellWidth + (map.cellWidth / 2), col * map.cellHeight + (map.cellHeight / 2), tileSize, '#FFA50060');
                 }
             }
         }
@@ -183,22 +211,47 @@ function updateMap() {
 }
 
 function changeWidth(e) {
-    map.width = prompt("Enter map width:");
+    map.width = parseInt(prompt("Enter map width:"));
     initMap();
 }
 
 function changeHeight(e) {
-    map.height = prompt("Enter map Height:");
+    map.height = parseInt(prompt("Enter map Height:"));
     initMap();
+}
+
+function placeSelected(e) {
+    if (selectedCategory === 'tiles')
+        placeTile(e);
+    else if (selectedCategory === 'entities')
+        placeEntitity(e);
 }
 
 function placeTile(e) {
     let xy = eventToXY(e);
     let x = xy[0];
     let y = xy[1];
-    
+
     map.tiles[selectedLayer][y][x] = getCellFromXY(x, y) === placedTile ? null : placedTile;
     //console.log(map.tiles)
+    updateMap();
+}
+
+function placeEntitity(e) {
+    let xy = eventToXY(e);
+    let x = xy[0];
+    let y = xy[1];
+
+    if (selectedLayer == 'lights') {
+        map.entities[selectedLayer][y][x] = !!getEntityFromXY(x, y, 'lights') ? null : {
+            x: x,
+            y: y,
+            radius: 12
+        };
+    }
+
+    console.log(getEntityFromXY(x, y, 'lights'))
+
     updateMap();
 }
 
@@ -206,7 +259,9 @@ function drawTile(id, x, y, layer = selectedLayer) {
     let sx = Math.floor(id / tilesetHeight);
     let sy = id % tilesetHeight;
     
-    ctx.globalAlpha = layer == selectedLayer ? 1 : 0.4;
+    let isOpaque = selectedLayer == 'lights' || layer == selectedLayer;
+
+    ctx.globalAlpha = isOpaque ? 1 : 0.4;
     ctx.drawImage(
         tilesets.walls, 
         sx * tileSize, 
@@ -225,6 +280,13 @@ function getCellFromXY(x, y, layer = selectedLayer) {
     if (y >= map.tiles[layer].length || x >= map.tiles[layer][0].length) return null;
 
     return map.tiles[layer][y][x];
+}
+
+function getEntityFromXY(x, y, layer) {
+    if (map.entities[layer] == undefined) return null;
+    if (y >= map.tiles['walls'].length || x >= map.tiles['walls'][0].length) return null;
+
+    return map.entities[layer][y][x];
 }
 
 function eventToXY(e) {
@@ -257,8 +319,21 @@ function saveMap() {
     let output = {
         width: map.width,
         height: map.height,
-        tiles: map.tiles
+        tiles: map.tiles,
+        entities: {}
     }
+
+    let lights = {};
+    for (let row of map.entities.lights) {
+        for (let light of row) {
+            if (light == undefined)
+                continue;
+
+            let key = light.x + ',' + light.y;
+            lights[key] = light;
+        }
+    }
+    output.entities.lights = lights;
 
     let data = new Blob([JSON.stringify(output)], {type: 'text/json'});
     let elem = document.createElement('a');
@@ -280,6 +355,18 @@ function loadMap() {
             map.width = data.width;
             map.height = data.height;
             map.tiles = data.tiles;
+
+            let lightsArray = Array.from({length: map.height}, e => Array(map.width).fill(null));
+            try {
+                Object.values(data.entities.lights).forEach(light => {
+                    lightsArray[light.y][light.x] = light;
+                });
+            }
+            catch {
+                
+            }
+            map.entities.lights = lightsArray;
+
             updateMap();
         }
       

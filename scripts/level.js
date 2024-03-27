@@ -6,6 +6,7 @@ class Level {
 		this.cellHeight = 0;
         this.tileSize = 16;
 		this.tiles = [];
+        this.lights = {};
 
         this.numRows = null;
         this.numCols = null;
@@ -18,6 +19,7 @@ class Level {
 				.then((data) => {
                     console.log(data)
 					this.tiles = data.tiles;
+                    this.entities = data.entities;
 
                     this.numRows = data.height ?? data.tiles.walls[0].length;
                     this.numCols = data.width ?? data.tiles.walls.length;
@@ -51,6 +53,22 @@ class Level {
 
     getWallFromXY = (x, y) => {
         return this.getFromXY(x, y, 'walls');
+    }
+
+    getLightFromXY = (x, y) => {
+        if (Array.isArray(x)) {
+            y = x[1];
+            x = x[0];
+        }
+
+		if (this.tiles == undefined || x == undefined || y == undefined)
+            return null;
+		
+        if (x < 0 || x >= this.numCols || y < 0 || y >= this.numRows)
+            return null;
+        
+        let key = x + ',' + y;
+        return this.entities.lights[key];
     }
 
 	xyToPos = (x, y) => {

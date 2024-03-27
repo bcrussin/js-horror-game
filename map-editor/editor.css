@@ -94,6 +94,8 @@ main > div {
 
 #map-canvas {
     image-rendering: pixelated;
+    overflow-x: scroll;
+    overflow-y: scroll;
 }
 
 #tilemap-container {
