@@ -1,6 +1,17 @@
 {
-    "current": "0.1.1",
+    "current": "0.1.2",
     "versions": {
+        "0.1.2": {
+            "title": "Layers & Lighting v1",
+            "description": "Implemented ambient lighting, as well as separating maps into foreground and background layers.",
+            "changes": [
+                "Created background layer for floor tile data",
+                "Created lighting layer for ambient lights",
+                "Map editor now allows switching between layers",
+                "Implemented two light sources: point lights and single-tile lights",
+                "Ambient lighting is now rendered onto a separate canvas for more performant blurs"
+            ]
+        },
         "0.1.1": {
             "title": "Implement Version History",
             "description": "Added the ability to view current and past versions and any changes they implemented",

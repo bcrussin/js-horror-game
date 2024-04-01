@@ -72,6 +72,12 @@ class Renderer {
 			y -= h / 2;
 		}
 		this.ctx.fillRect(x, y, w, h);
+
+		if (options.hasBorder) {
+			this.ctx.strokeStyle = options.border.color;
+			this.ctx.lineWidth = options.border.weight;
+			this.ctx.stroke();
+		}
 	};
 
 	line = (x1, y1, x2, y2, c, thickness, options = {}) => {
@@ -115,7 +121,9 @@ class Renderer {
 		this.ctx.stroke();
 	};
 
-	circle = (x, y, r, c, options = {}) => {
+	circle = (x, y, r, options = {}) => {
+		options = this.parseOptions(options);
+
 		let rx = r / 2;
 		let ry = r / 2;
 
@@ -132,10 +140,16 @@ class Renderer {
 		}
 		
 		this.ctx.setTransform(1, 0, 0, 1, 0, 0);
-		this.ctx.fillStyle = c;
+		this.ctx.fillStyle = options.color;
 		this.ctx.beginPath();
 		this.ctx.ellipse(x, y, rx, ry, 0, 0, 2 * Math.PI);
 		this.ctx.fill();
+
+		if (options.hasBorder) {
+			this.ctx.strokeStyle = options.border.color;
+			this.ctx.lineWidth = options.border.weight;
+			this.ctx.stroke();
+		}
 	};
 
 	text = (string, x, y, options = {}) => {
@@ -214,9 +228,19 @@ class Renderer {
 
 		let isScreenSpace = this.isScreenSpace(options.screenSpace);
 
+		options.hasBorder = false;
+		if (!!options.border) {
+			options.hasBorder = true;
+			options.border = {
+				weight: options.border.weight ?? 1,
+				color: options.border.color ?? 'white'
+			}
+		}
+
 		let output = options;
 		output.opacity = opacity;
 		output.isScreenSpace = isScreenSpace;
+		output.color = options.color ?? options.c ?? 'white';
 
 		return output;
 	}

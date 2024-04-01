@@ -15,6 +15,10 @@ body {
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
+.display-none {
+    display: none;
+}
+
 .split-container {
     display: flex;
     width: 100%;
@@ -92,6 +96,10 @@ main > div {
     overflow: scroll;
 }
 
+.toolbar-group {
+    margin-right: 32px;
+}
+
 #map-canvas {
     image-rendering: pixelated;
     overflow-x: scroll;
@@ -114,17 +122,29 @@ main > div {
 
 .tile {
     cursor: pointer;
-    width: 4vw;
-    height: 4vw;
-    margin: 2px;
-    transition: border 0.2s;
+    background-color: transparent;
+    z-index: 50;
+    width: 3vw;
+    height: 3vw;
+    margin: 1px;
+    transition: all 0.2s;
     border: 2px solid transparent;
 }
 
 .tile:hover {
     border: 2px solid #ffffff80;
+    z-index: 60;
+    background-color: black;
 }
 
 .tile.selected {
     border: 2px solid white;
+}
+
+.tile.zoom:hover {
+    transform: scale(1.6);
+}
+
+button.selected {
+    border: 2px solid gold;
 }

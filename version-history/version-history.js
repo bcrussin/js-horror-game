@@ -38,7 +38,7 @@ function parseChangelog(data, onlyCurrent) {
 
 		let title = document.createElement("h4");
 		let titleText = `v${key} - ${version.title}`;
-		if (key == data.current) titleText += " (Current)";
+		if (!onlyCurrent && key == data.current) titleText += " (Current)";
 		title.innerHTML = titleText;
 
 		let description = document.createElement("p");

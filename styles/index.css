@@ -27,7 +27,7 @@ canvas {
     image-rendering: pixelated;
 }
 
-#mask-canvas {
+canvas.hidden {
     visibility: hidden;
 }
 

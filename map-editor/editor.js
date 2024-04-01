@@ -1,4 +1,5 @@
 const tilesetContainer = document.getElementById('tileset');
+const tilesetControls = document.getElementById('tile-controls');
 const layerSelector = document.getElementById('layer-select');
 const mapContainer = document.getElementById('map-container');
 const canvas = document.getElementById('map-canvas');
@@ -14,12 +15,29 @@ let zoom = 4;
 
 let selectedLayer = layerSelector.value;
 let selectedCategory = 'tiles';
+let selectedAction = null;
+
+const defaultLights = [
+    {
+        type: 0,
+        x: null,
+        y: null,
+        size: 4
+    },
+    {
+        type: 1,
+        x: null,
+        y: null
+    }
+]
 
 let map = {
     width: 10,
     height: 10,
     cellWidth: 0,
     cellHeight: 0,
+    zoom: zoom,
+    player: {},
     tiles: {
         walls: [],
         background: [],
@@ -59,12 +77,14 @@ function getTiles() {
     tilesetWidth = Math.floor(tilesets.walls.width / tileSize);
     tilesetHeight = Math.floor(tilesets.walls.height / tileSize);
 
+    tilesetContainer.innerHTML = '';
+
     for (let i = 0; i < tilesetWidth; i++) {
         for (let j = 0; j < tilesetHeight; j++) {
             let tileImage = document.createElement('canvas');
-            tileImage.classList.add('tile');
+            tileImage.classList.add('tile', 'zoom');
             tileImage.id = (i * tilesetHeight) + j;
-            tileImage.onpointerdown = (e) => selectTile(e);
+            tileImage.onpointerdown = (e) => selectTile(e.target.id);
             let tileCtx = tileImage.getContext('2d');
 
             tilesetContainer.appendChild(tileImage);
@@ -77,19 +97,68 @@ function getTiles() {
     }
 }
 
-function selectTile(event) {
+function getLightingTiles() {
+    tilesetContainer.innerHTML = '';
+
+    let point = addTile();
+
+    point.ctx.setTransform(1, 0, 0, 1, 0, 0);
+    point.ctx.fillStyle = 'white';
+    point.ctx.beginPath();
+    point.ctx.ellipse(point.canvas.width / 2, point.canvas.height / 2, point.canvas.width / 2, point.canvas.height / 2, 0, 0, 2 * Math.PI);
+    point.ctx.fill();
+
+    let cell = addTile();
+
+    cell.ctx.fillStyle = 'white';
+    cell.ctx.fillRect(0, 0, cell.canvas.width, cell.canvas.height);
+}
+
+function addTile() {
+    let tileImage = document.createElement('canvas');
+    tileImage.classList.add('tile');
+    tileImage.id = tilesetContainer.childElementCount;
+    tileImage.onpointerdown = (e) => selectTile(e.target.id);
+    let tileCtx = tileImage.getContext('2d');
+
+    tilesetContainer.appendChild(tileImage);
+
+    return {
+        canvas: tileImage,
+        ctx: tileCtx
+    }
+}
+
+function selectTile(id) {
+    selectAction(null);
     if (selectedTile != null) {
         // Remove border from previously selected tile
         let oldSelected = document.getElementById(selectedTile);
-        oldSelected.classList.remove('selected');
+        if (!!oldSelected) oldSelected.classList.remove('selected');
     }
-    if (selectedTile === parseInt(event.target.id)) {
+    if (selectedTile === parseInt(id)) {
         // Deselect tile if clicked again
         selectedTile = null;
     } else {
         // Select tile if not currently selected
-        selectedTile = parseInt(event.target.id);
+        selectedTile = parseInt(id);
         event.target.classList.add('selected');
+    }
+}
+
+function selectAction(action) {
+    let actionElem = document.getElementById('action-' + selectedAction);
+    if (!!actionElem) {
+        actionElem.classList.remove('selected');
+    }
+
+    if (action != undefined) {
+        selectTile(null)
+        selectedAction = action == selectedAction ? null : action;
+        actionElem = document.getElementById('action-' + action);
+        if (!!actionElem) {
+            actionElem.classList.add('selected');
+        }
     }
 }
 
@@ -154,11 +223,15 @@ function initMap () {
 function changeLayer(layer) {
     switch(layer) {
         case 'lights':
+            if (selectedCategory != 'entities') getLightingTiles();
             selectedCategory = 'entities';
+            tilesetControls.classList.remove('display-none');
             break;
         case 'background':
         case 'walls':
+            if (selectedCategory != 'tiles') getTiles();
             selectedCategory = 'tiles';
+            tilesetControls.classList.add('display-none');
             break;
     }
 
@@ -181,7 +254,7 @@ function updateMap() {
     if (map.tiles == undefined) return;
     
     if (!!map.tiles.walls) {
-        //console.log(map.tiles)
+        // TILES
         for (let row = 0; row < map.height; row++) {
             for (let col = 0; col < map.width; col++) {
                 let value = getCellFromXY(row, col, 'background');
@@ -193,11 +266,14 @@ function updateMap() {
                 if (value != undefined) {
                     drawTile(value, row, col, 'walls');
                 }
+            }
+        }
 
+        // LIGHTING
+        for (let row = 0; row < map.height; row++) {
+            for (let col = 0; col < map.width; col++) {
                 value = getEntityFromXY(row, col, 'lights');
-                if (value != undefined) {
-                    renderer.circle(row * map.cellWidth + (map.cellWidth / 2), col * map.cellHeight + (map.cellHeight / 2), tileSize, '#FFA50060');
-                }
+                drawLight(value);
             }
         }
     }
@@ -241,13 +317,14 @@ function placeEntitity(e) {
     let xy = eventToXY(e);
     let x = xy[0];
     let y = xy[1];
+    console.log(selectedTile)
 
     if (selectedLayer == 'lights') {
-        map.entities[selectedLayer][y][x] = !!getEntityFromXY(x, y, 'lights') ? null : {
-            x: x,
-            y: y,
-            radius: 12
-        };
+        let lightObj = { ...defaultLights[selectedTile] };
+        lightObj.x = x;
+        lightObj.y = y;
+
+        map.entities[selectedLayer][y][x] = !!getEntityFromXY(x, y, 'lights') ? null : lightObj;
     }
 
     console.log(getEntityFromXY(x, y, 'lights'))
@@ -273,6 +350,30 @@ function drawTile(id, x, y, layer = selectedLayer) {
         map.cellHeight
     );
     ctx.globalAlpha = 1;
+}
+
+function drawLight(light) {
+    if (light == undefined) return;
+
+    switch(light.type) {
+        case 0:
+            renderer.circle(light.x * map.cellWidth + (map.cellWidth / 2), light.y * map.cellHeight + (map.cellHeight / 2), tileSize * light.size * zoom, {
+                color: '#FFA50060',
+                border: {
+                    color: 'black',
+                    weight: 2
+                }
+            });
+            break;
+        case 1:
+            renderer.rect(light.x * map.cellWidth, light.y * map.cellHeight, map.cellWidth, map.cellHeight, {
+                c: '#FFA50060',
+                border: {
+                    color: 'black',
+                    weight: 2
+                }
+            })
+    }
 }
 
 function getCellFromXY(x, y, layer = selectedLayer) {
@@ -320,6 +421,7 @@ function saveMap() {
         width: map.width,
         height: map.height,
         tiles: map.tiles,
+        zoom: map.zoom,
         entities: {}
     }
 
@@ -355,6 +457,7 @@ function loadMap() {
             map.width = data.width;
             map.height = data.height;
             map.tiles = data.tiles;
+            map.zoom = data.zoom;
 
             let lightsArray = Array.from({length: map.height}, e => Array(map.width).fill(null));
             try {
@@ -374,4 +477,13 @@ function loadMap() {
     })
 
     elem.click();
+}
+
+function changeZoom() {
+    map.zoom = parseInt(prompt("Insert a zoom multiplier to apply to this level"));
+}
+
+function changePlayerSize() {
+    map.player.width = parseInt(prompt("Insert player width"));
+    map.player.height = parseInt(prompt("Insert player height"));
 }

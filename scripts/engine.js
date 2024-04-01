@@ -2,11 +2,14 @@ const canvas = document.getElementById("game-canvas");
 const ctx = canvas.getContext("2d");
 const maskCanvas = document.getElementById("mask-canvas");
 const maskCtx = maskCanvas.getContext("2d");
+const lightingCanvas = document.getElementById("lighting-canvas");
+const lightingCtx = lightingCanvas.getContext("2d");
 const tilesetImage = new Image();
 tilesetImage.src = "tilesets/tiles.png";
 
 const renderer = new Renderer(canvas, ctx);
 const maskRenderer = new Renderer(maskCanvas, maskCtx);
+const lightingRenderer = new Renderer(lightingCanvas, lightingCtx);
 
 const fpsCounter = document.getElementById("fps");
 
@@ -45,7 +48,7 @@ const FPS_NUM_AVERAGED = 10;
 let currFPS;
 let prevFPS = [];
 const GLOBAL_LIGHTING = "10";
-let isDebug = false;
+let maskMode = 0;
 
 let pointQueue = [];
 let flashlightDistance = 150;
@@ -82,20 +85,24 @@ setTimeout(() => {
 	helpText.classList.remove("centered");
 }, 1500);
 
-
 tilesetImage.onload = () => {
 	map.load("layered_lighted_map").then((data) => {
 		camera = new Camera({
 			level: map,
-			zoom: 2,
+			zoom: data?.zoom ?? 2,
 		});
 		renderer.setCamera(camera);
 		maskRenderer.setCamera(camera);
+		lightingRenderer.setCamera(camera);
 		raycaster = new Raycaster(map);
 		player.x = 32;
 		player.y = 32;
+		if (!!data.player) {
+			player.width = data.player?.width ?? player.width;
+			player.height = data.player?.height ?? player.height;
+		}
 
-		console.log(isDebug)
+		console.log(maskMode)
 
 		onResize();
 
@@ -183,6 +190,9 @@ function onResize() {
 	maskCanvas.width = canvas.width;
 	maskCanvas.height = canvas.height;
 
+	lightingCanvas.width = canvas.width;
+	lightingCanvas.height = canvas.height;
+
 	// REMOVE LATER
 	camera.resize();
 }
@@ -192,7 +202,6 @@ function drawMap() {
 	map.cellHeight = 16; //canvas.height / map.height;
 
 	if (!!map.tiles) {
-		//console.log(map.tiles)
 		for (let col = 0; col < map.numCols; col++) {
 			for (let row = 0; row < map.numRows; row++) {
 				let value = map.getFromXY(row, col);
@@ -270,54 +279,24 @@ function render() {
 	// DRAW SCREEN CONTENTS
 	ctx.globalCompositeOperation = "source-over";
 
-	/*
-	let rays = [];
-	let lighting = {};
-	let angle = player.dir - (FOV / 2);
-	for (let i = 0; i < NUM_RAYS; i++) {
-		angle += FOV / NUM_RAYS;
-		let ray = raycaster.cast(player.x, player.y, angle, {
-			maxDistance: flashlightDistance
-		});
-		rays.push(ray);
-	}
-	//___
-
-	ctx.save();
-	ctx.beginPath();
-	ctx.moveTo(renderer.toScreenX(player.x), renderer.toScreenY(player.y));
-	for (ray of rays) {
-		ctx.lineTo(renderer.toScreenX(ray.hit[0]), renderer.toScreenY(ray.hit[1]));
-		console.log(ray.hit)
-	}
-	ctx.lineTo(renderer.toScreenX(player.x), renderer.toScreenY(player.y));
-	ctx.closePath();
-	ctx.clip();*/
-
+	// Render tiles and lighting masks onto their respective canvases
 	drawMap();
 	renderMask();
 
-	/*renderer.rect(player.x, player.y, player.width, player.height, {
-		color: "#222222",
-		centered: true,
-	});*/
 	renderer.tile(tilesetImage, 111, player.x, player.y, {
 		convertToGrid: false,
 		centered: true,
 		width: player.width,
 		height: player.height
 	});
-	//renderMask();
 
-	// Draw layer mask for objects
+	// Draw lighting mask (flashlight + ambient lighting)
 	ctx.globalCompositeOperation = "destination-in";
+	ctx.drawImage(maskCanvas, 0, 0, maskCanvas.width, maskCanvas.height, 0, 0, canvas.width, canvas.height);
 
-	ctx.drawImage(maskCanvas, 0, 0);
-	ctx.filter = "none";
 
 	// DRAW MASK VISIBLY
 	ctx.globalCompositeOperation = "source-over";
-
 	// renderMask(false);
 	//ctx.drawImage(maskCanvas, 0, 0);
 
@@ -334,9 +313,11 @@ function render() {
 }
 
 function renderMask(includeTiles = true) {
+	if(maskMode > 0) renderer.clear();
 	maskRenderer.clear();
+	lightingRenderer.clear();
 
-	// TEMPORARY SOLUTION TO WHITE OUT-OF-BOUNDS BACKGROUND
+	// TEMPORARY SOLUTION TO HIDE OUT-OF-BOUNDS BACKGROUND
 
 	// Top edge
 	renderer.rect(-10000, -10000, 20000, 10000 + 2, {
@@ -356,7 +337,8 @@ function renderMask(includeTiles = true) {
 	});
 
 	maskCtx.filter = "blur(20px)";
-	maskRenderer.circle(player.x, player.y, player.width * 4, '#ffffffc0', {
+	maskRenderer.circle(player.x, player.y, player.width * 4, {
+		color: '#ffffffc0',
 		centered: true
 	})
 	maskCtx.filter = "none";
@@ -377,7 +359,6 @@ function renderMask(includeTiles = true) {
 	}
 
 	maskCtx.filter = "blur(5px)";
-	//maskRenderer.filter = 'blur(50px)'
 	maskCtx.fillStyle = includeTiles ? "#ffffffa0" : "#FBC02D60";
 	maskCtx.beginPath();
 	maskCtx.moveTo(renderer.toScreenX(player.x), renderer.toScreenY(player.y));
@@ -395,7 +376,6 @@ function renderMask(includeTiles = true) {
 
 	// Light cells depending on raycast and proximity
 	if (!!map.tiles) {
-		//console.log(map.tiles)
 		for (let col = 0; col < map.numCols; col++) {
 			for (let row = 0; row < map.numRows; row++) {
 				let value = map.getWallFromXY(row, col);
@@ -411,13 +391,10 @@ function renderMask(includeTiles = true) {
 					maskRenderer.rect(row * map.tileSize, col * map.tileSize, map.tileSize, map.tileSize, { c: "#ffffff" + val });
 				}
 
+				// Draw a light if there is one
 				let lightValue = map.getLightFromXY(row, col);
 				if (lightValue != undefined) {
-					maskCtx.filter = "blur(15px)";
-					maskRenderer.circle(row * map.tileSize, col * map.tileSize, lightValue.radius * map.tileSize, 'white', {
-						offset: true
-					})
-					maskCtx.filter = "none";
+					renderLight(lightValue, lightValue.x, lightValue.y);
 				}
 			}
 		}
@@ -437,8 +414,32 @@ function renderMask(includeTiles = true) {
 	// 	color: 'white',
 	// 	screenSpace: true
 	// })
+
+	// Draw all ambient lights with one call to minimize lag from blur
+	maskCtx.filter = 'blur(20px)'
+	maskCtx.drawImage(lightingCanvas, 0, 0, lightingCanvas.width, lightingCanvas.height, 0, 0, maskCanvas.width, maskCanvas.height);
+	maskCtx.filter = 'none';
 }
 
+function renderLight(light, row, col) {
+	switch(light.type) {
+		case 0:
+			// Point light
+			lightingRenderer.circle(row * map.tileSize, col * map.tileSize, light.size * map.tileSize, {
+				color: 'white',
+				offset: true
+			})
+			break;
+		case 1:
+			// Tile light
+			lightingRenderer.rect(row * map.tileSize, col * map.tileSize, map.tileSize, map.tileSize, {
+				color: 'white',
+			})
+			break;
+	}
+}
+
+// UNUSED FLASHLIGHT FLICKER CODE
 let NUM_FLICKERS = 4;
 let flickerInterval = 10000;
 let flickerNum = 0;
@@ -524,14 +525,22 @@ function loadChangelogModal() {
 	});
 }
 
+// DEBUG VIEWS
+
 function toggleMaskView() {
-	if (isDebug) {
-		canvas.style.display = 'block';
-		maskCanvas.style.visibility = 'hidden';
-		isDebug = false;
-	} else {
-		canvas.style.display = 'none';
-		maskCanvas.style.visibility = 'visible';
-		isDebug = true;
+	canvas.style.display = 'none';
+	maskCanvas.style.visibility = 'hidden';
+
+	maskMode = (maskMode + 1) % 2;
+
+	switch(maskMode) {
+		case 0:
+			canvas.style.display = 'block';
+			canvas.style.visibility = 'visible';
+			break;
+		case 1:
+			//maskCanvas.style.display = 'block';
+			maskCanvas.style.visibility = 'visible';
+			break;
 	}
 }

@@ -16,9 +16,13 @@
                         <button class="text-button" onclick="saveMap()">💾</button>
                     </div>
                     <div class="map-toolbar">
-                        <span style="margin-right: 32px;">
+                        <span class="toolbar-group">
+                            <button class="text-button" onclick="changePlayerSize()">&#128100;</button>
+                        </span>
+                        <span class="toolbar-group">
                             <button class="text-button" onclick="changeWidth()">&#x2194;</button>
                             <button class="text-button" onclick="changeHeight()">&#x2195;</button>
+                            <button class="text-button" onclick="changeZoom()">&#128269;</button>
                         </span>
                         <button class="text-button plus-button" onclick="zoomOut()">-</button>
                         <button class="text-button plus-button" onclick="zoomIn()">+</button>
@@ -37,6 +41,9 @@
                         <option value="background">Background</option>
                         <option value="lights">Lights</option>
                     </select>
+                </div>
+                <div id="tile-controls" class="display-none">
+                    <button id="action-edit" onclick="selectAction('edit')">Edit</button>
                 </div>
                 <div id="tileset">
                 </div>
