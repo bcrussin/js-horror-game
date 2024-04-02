@@ -55,8 +55,22 @@
             <button onclick="hideModal('help')">Close</button>
         </div>
     </div>
+
+    <div id="surprise-modal" class="modal">
+        <h2>Congratualations!</h2>
+
+        <p>Hint: Press '1' on your keyboard for a reward :)</p>
+        <div class="modal-options">
+            <button onclick="hideModal('surprise')">Close</button>
+        </div>
+    </div>
+
+    <img id="horror" src="tilesets/horror.png">
     
+    <script src="libraries/astar.js"></script>
+
     <script src="version-history/version-history.js"></script>
+    <script src="scripts/entity.js"></script>
     <script src="scripts/renderer.js"></script>
     <script src="scripts/raycast.js"></script>
     <script src="scripts/level.js"></script>

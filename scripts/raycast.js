@@ -24,18 +24,18 @@ class Raycaster {
         let isDecreasingX = (dirX <= 0) * -1;
         let isDecreasingY = (dirY <= 0) * -1;
 
-        let cellX = Math.floor(x / this.level.tileSize);
-        let cellY = Math.floor(y / this.level.tileSize);
+        let cellX = Math.floor(x / Level.tileSize);
+        let cellY = Math.floor(y / Level.tileSize);
 
         // Initialize rays to the player's current cell
         let rayX = [cellX, cellY];
         let rayY = [cellX, cellY];
         
         // Initial ray position calculations
-        rayX[0] = ((cellX + isIncreasingX) * this.level.tileSize);
+        rayX[0] = ((cellX + isIncreasingX) * Level.tileSize);
         rayX[1] = y + ((rayX[0] - x) * Math.tan(rot));
         
-        rayY[1] = ((cellY + isIncreasingY) * this.level.tileSize);
+        rayY[1] = ((cellY + isIncreasingY) * Level.tileSize);
         rayY[0] = x + ((rayY[1] - y) / Math.tan(rot));
 
         while (Math.hypot(x - startX, y - startY) < maxDistance) {
@@ -49,7 +49,7 @@ class Raycaster {
                 x = rayX[0];
                 y = rayX[1];
 
-                rayX[0] = ((cellX + dirX) * this.level.tileSize);
+                rayX[0] = ((cellX + dirX) * Level.tileSize);
                 rayX[1] = y + ((rayX[0] - x) * Math.tan(rot));
 
                 cellXOffset = isDecreasingX
@@ -57,7 +57,7 @@ class Raycaster {
                 x = rayY[0];
                 y = rayY[1];
                 
-                rayY[1] = ((cellY + dirY) * this.level.tileSize);
+                rayY[1] = ((cellY + dirY) * Level.tileSize);
                 rayY[0] = x + ((rayY[1] - y) / Math.tan(rot));
 
                 cellYOffset = isDecreasingY
@@ -68,10 +68,10 @@ class Raycaster {
                 break;
             }
 
-            cellX = Math.floor(x / this.level.tileSize);
-            cellY = Math.floor(y / this.level.tileSize);
+            cellX = Math.floor(x / Level.tileSize);
+            cellY = Math.floor(y / Level.tileSize);
 
-            if (!!this.level.getWallFromXY(cellX + cellXOffset, cellY + cellYOffset)) {
+            if (!!Level.getWallFromXY(cellX + cellXOffset, cellY + cellYOffset)) {
                 return {
                     hit: [x, y],
                     hitCell: [cellX + cellXOffset, cellY + cellYOffset],

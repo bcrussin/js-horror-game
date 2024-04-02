@@ -19,13 +19,12 @@ const modals = {
 	pause: document.getElementById("pause-modal"),
 	help: document.getElementById("help-modal"),
 	changelog: document.getElementById("changelog-modal"),
+	surprise: document.getElementById("surprise-modal")
 };
 
-let map = new Level();
 const player = new Player({
-	map: map,
-	width: 14,
-	height: 14,
+	width: 12,
+	height: 12,
 });
 const SPEED = 0.6 * 1.6;
 const SPRINT_SPEED = 1 * 1.6;
@@ -34,6 +33,12 @@ const LINE_PADDING = 10;
 const LINE_MIN_LENGTH = 20;
 
 let isPaused = false;
+
+// TEMP FOR FUN
+let TEMP_ALERT_VISITED = false;
+let TEMP_HORROR_SOUND = null;
+let newZoom = 0;
+let isGameOver = false;
 
 let FPS = 60;
 let FPS_INTERVAL = 1000 / FPS;
@@ -86,23 +91,20 @@ setTimeout(() => {
 }, 1500);
 
 tilesetImage.onload = () => {
-	map.load("layered_lighted_map").then((data) => {
+	Level.load("horror_map").then((data) => {
 		camera = new Camera({
-			level: map,
 			zoom: data?.zoom ?? 2,
 		});
 		renderer.setCamera(camera);
 		maskRenderer.setCamera(camera);
 		lightingRenderer.setCamera(camera);
-		raycaster = new Raycaster(map);
+		raycaster = new Raycaster();
 		player.x = 32;
 		player.y = 32;
 		if (!!data.player) {
 			player.width = data.player?.width ?? player.width;
 			player.height = data.player?.height ?? player.height;
 		}
-
-		console.log(maskMode)
 
 		onResize();
 
@@ -136,13 +138,20 @@ window.onkeydown = (e) => {
 
 window.onkeyup = (e) => {
 	Keys.release(e.key);
-	switch (e.key) {
+	switch (e.key.toString()) {
 		case "h":
 			toggleModal("help");
 			break;
 		case "Escape":
 		case "p":
 			toggleModal("pause");
+			break;
+		case "_":
+			player.x = 230;
+			player.y = 75;
+			break;
+		case "+":
+			new Dummy(32, 32);
 			break;
 		case "/":
 			toggleMaskView();
@@ -198,13 +207,13 @@ function onResize() {
 }
 
 function drawMap() {
-	map.cellWidth = 16; //canvas.width / map.width;
-	map.cellHeight = 16; //canvas.height / map.height;
+	Level.cellWidth = 16; //canvas.width / level.width;
+	Level.cellHeight = 16; //canvas.height / level.height;
 
-	if (!!map.tiles) {
-		for (let col = 0; col < map.numCols; col++) {
-			for (let row = 0; row < map.numRows; row++) {
-				let value = map.getFromXY(row, col);
+	if (!!Level.tiles) {
+		for (let col = 0; col < Level.numCols; col++) {
+			for (let row = 0; row < Level.numRows; row++) {
+				let value = Level.getFromXY(row, col);
 				if (value != undefined) {
 					renderer.tile(tilesetImage, value, row, col);
 				} else {
@@ -212,12 +221,12 @@ function drawMap() {
 					let c;
 
 					if ((row + (col % 2)) % 2 == 0) {
-						c = col > map.numCols / 2 ? "orange" : "blue";
+						c = col > Level.numCols / 2 ? "orange" : "blue";
 					} else {
-						c = col > map.numCols / 2 ? "purple" : "green";
+						c = col > Level.numCols / 2 ? "purple" : "green";
 					}
 
-					renderer.rect(row * map.tileSize, col * map.tileSize, map.tileSize, map.tileSize, {
+					renderer.rect(row * Level.tileSize, col * Level.tileSize, Level.tileSize, Level.tileSize, {
 						color: c,
 					});
 				}
@@ -228,7 +237,9 @@ function drawMap() {
 
 let droppedFrames = 0;
 function frameUpdate(now) {
-	requestAnimationFrame(frameUpdate);
+	if (!isGameOver)
+		requestAnimationFrame(frameUpdate);
+
 	window.scrollTo(0, 0)
 
 	let delta = now - lastFrame;
@@ -262,13 +273,29 @@ function update(delta) {
 	let h = -Keys.isPressed("a") + Keys.isPressed("d");
 	let v = -Keys.isPressed("w") + Keys.isPressed("s");
 
-	let spd = Keys.isPressed("shift") ? SPRINT_SPEED : SPEED;
+	let spd = TEMP_ALERT_VISITED ? 1.4 : Keys.isPressed("shift") ? SPRINT_SPEED : SPEED;
 
 	player.move(h * spd, v * spd, delta);
+	if (!TEMP_ALERT_VISITED && player.x > 150 && player.x < 190 && player.y < 70) {
+		TEMP_ALERT_VISITED = true;
+		newZoom = camera.zoom * 1.16;
+		new Dummy(104, 40);
+		TEMP_HORROR_SOUND = new Audio("audio/heartbeat.mp3");
+		TEMP_HORROR_SOUND.play();
+		//showModal('surprise');
+	}
 	//player.update(delta);
 
 	camera.x -= (camera.x - player.x) * camera.speed;
 	camera.y -= (camera.y - player.y) * camera.speed;
+
+	if (TEMP_ALERT_VISITED && newZoom - camera.zoom > 0.01) {
+		camera.zoom += (newZoom - camera.zoom) * 0.02;
+	} else if (TEMP_ALERT_VISITED) {
+		camera.zoom = newZoom;
+	}
+
+	Entity.updateAll();
 
 	player.faceMouse(Mouse.getPos(), renderer.canvas, delta);
 }
@@ -281,7 +308,7 @@ function render() {
 
 	// Render tiles and lighting masks onto their respective canvases
 	drawMap();
-	renderMask();
+	Entity.drawAll();
 
 	renderer.tile(tilesetImage, 111, player.x, player.y, {
 		convertToGrid: false,
@@ -291,6 +318,7 @@ function render() {
 	});
 
 	// Draw lighting mask (flashlight + ambient lighting)
+	renderMask();
 	ctx.globalCompositeOperation = "destination-in";
 	ctx.drawImage(maskCanvas, 0, 0, maskCanvas.width, maskCanvas.height, 0, 0, canvas.width, canvas.height);
 
@@ -328,11 +356,11 @@ function renderMask(includeTiles = true) {
 		c: "black",
 	});
 	// Bottom edge
-	renderer.rect(-10000, map.height, 20000, 20000, {
+	renderer.rect(-10000, Level.height, 20000, 20000, {
 		c: "black",
 	});
 	// Right edge
-	renderer.rect(map.width, -10000, 20000, 20000, {
+	renderer.rect(Level.width, -10000, 20000, 20000, {
 		c: "black",
 	});
 
@@ -375,12 +403,12 @@ function renderMask(includeTiles = true) {
 	if (!includeTiles) return;
 
 	// Light cells depending on raycast and proximity
-	if (!!map.tiles) {
-		for (let col = 0; col < map.numCols; col++) {
-			for (let row = 0; row < map.numRows; row++) {
-				let value = map.getWallFromXY(row, col);
+	if (!!Level.tiles) {
+		for (let col = 0; col < Level.numCols; col++) {
+			for (let row = 0; row < Level.numRows; row++) {
+				let value = Level.getWallFromXY(row, col);
 				if (value != undefined) {
-					let dist = Math.hypot(row * map.tileSize - player.x, col * map.tileSize - player.y) * 3;
+					let dist = Math.hypot(row * Level.tileSize - player.x, col * Level.tileSize - player.y) * 3;
 
 					dist = 255 - Math.min(dist, 255);
 					dist += lighting[[row, col].toString()] ?? 0;
@@ -388,11 +416,11 @@ function renderMask(includeTiles = true) {
 					let val = Math.min(dist, 255);
 					val = parseInt(val).toString(16).padStart(2, "0");
 
-					maskRenderer.rect(row * map.tileSize, col * map.tileSize, map.tileSize, map.tileSize, { c: "#ffffff" + val });
+					maskRenderer.rect(row * Level.tileSize, col * Level.tileSize, Level.tileSize, Level.tileSize, { c: "#ffffff" + val });
 				}
 
 				// Draw a light if there is one
-				let lightValue = map.getLightFromXY(row, col);
+				let lightValue = Level.getLightFromXY(row, col);
 				if (lightValue != undefined) {
 					renderLight(lightValue, lightValue.x, lightValue.y);
 				}
@@ -425,14 +453,14 @@ function renderLight(light, row, col) {
 	switch(light.type) {
 		case 0:
 			// Point light
-			lightingRenderer.circle(row * map.tileSize, col * map.tileSize, light.size * map.tileSize, {
+			lightingRenderer.circle(row * Level.tileSize, col * Level.tileSize, light.size * Level.tileSize, {
 				color: 'white',
 				offset: true
 			})
 			break;
 		case 1:
 			// Tile light
-			lightingRenderer.rect(row * map.tileSize, col * map.tileSize, map.tileSize, map.tileSize, {
+			lightingRenderer.rect(row * Level.tileSize, col * Level.tileSize, Level.tileSize, Level.tileSize, {
 				color: 'white',
 			})
 			break;
@@ -497,7 +525,7 @@ function hideModal(name) {
 
 	modals[name].classList.remove("show");
 
-	if (name === "pause") isPaused = false;
+	if (name === "pause" || name == "surprise") isPaused = false;
 	else if (isPaused) showModal("pause");
 }
 
@@ -543,4 +571,19 @@ function toggleMaskView() {
 			maskCanvas.style.visibility = 'visible';
 			break;
 	}
+}
+
+function gameOver() {
+	if (!!isGameOver) return;
+
+	isGameOver = true;
+	TEMP_HORROR_SOUND.pause();
+	TEMP_HORROR_SOUND = new Audio("audio/horror.mp3");
+	TEMP_HORROR_SOUND.play();
+	canvas.style.display = 'none';
+	document.getElementById('horror').style.display = 'block';
+
+	setTimeout(() => {
+		document.getElementById('horror').style.opacity = '0';
+	}, 3000)
 }

@@ -12,7 +12,7 @@ class Renderer {
 
 	setCamera = (camera) => {
 		this.camera = camera;
-		//this.canvas.width = this.camera.level.width;
+		//this.canvas.width = Level.width;
 		//this.canvas.height = this.camera.height;
 	};
 
@@ -167,17 +167,17 @@ class Renderer {
 	};
 
 	getTileWidth = () => {
-		return Math.ceil((this.canvas.width / this.camera.width) * this.camera.level.tileSize) + 2; //this.camera.getTileWidth();
+		return Math.ceil((this.canvas.width / this.camera.width) * Level.tileSize) + 2; //this.camera.getTileWidth();
 	};
 
 	getTileHeight = () => {
-		return Math.ceil((this.canvas.height / this.camera.height) * this.camera.level.tileSize) + 2; //this.camera.getTileHeight();
+		return Math.ceil((this.canvas.height / this.camera.height) * Level.tileSize) + 2; //this.camera.getTileHeight();
 	};
 
 	tile(image, id, x, y, options = {}) {
 		options = this.parseOptions(options);
 
-		let tileSize = this.camera.level.tileSize;
+		let tileSize = Level.tileSize;
 
 		let cellWidth = this.camera.getTileWidth();
 		let cellHeight = this.camera.getTileHeight();

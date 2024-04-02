@@ -7,6 +7,8 @@ class Camera {
         this._zoom = options.zoom ?? 1;
         this.speed = 0.2;
         if(options.level != undefined) this.setLevel(options.level);
+
+        this.resize();
     }
 
     get zoom() {
@@ -30,12 +32,9 @@ class Camera {
         if (!level) return;
         
         this.level = level;
-        this.resize();
     }
 
     resize = () => {
-        if (this.level == undefined) return;
-
         let multiplier = this.zoom;
         let aspect;
         
@@ -43,21 +42,21 @@ class Camera {
 
         if (wider) {
             aspect =  window.innerWidth / window.innerHeight;
-            this.width = (this.level.height / multiplier) * aspect;
-            this.height = this.level.height / multiplier;
+            this.width = (Level.height / multiplier) * aspect;
+            this.height = Level.height / multiplier;
         } else {
             aspect = window.innerHeight / window.innerWidth;
-            this.width = this.level.width / multiplier;
-            this.height = (this.level.width / multiplier) * aspect;
+            this.width = Level.width / multiplier;
+            this.height = (Level.width / multiplier) * aspect;
         }
     }
 
     getTileWidth = () => {
-        return (this.level.width / this.width) * this.level.tileSize;
+        return (Level.width / this.width) * Level.tileSize;
     }
 
     getTileHeight = () => {
-        return (this.level.height / this.height) * this.level.tileSize;
+        return (Level.height / this.height) * Level.tileSize;
     }
 
     toCameraXY = (x, y) => {

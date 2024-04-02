@@ -1,4 +1,16 @@
 class Level {
+    static width = 0;
+    static height = 0;
+    static cellWidth = 0;
+    static cellHeight = 0;
+    static tileSize = 16;
+
+    static tiles = [];
+    static lights = [];
+
+    static numRows = null;
+    static numCols = null;
+
 	constructor(options = {}) {
 		this.width = 0;
         this.height = 0;
@@ -12,13 +24,24 @@ class Level {
         this.numCols = null;
 	}
 
-	load = (levelName) => {
+	static load = (levelName) => {
 		return new Promise((resolve) => {
 			fetch("levels/" + levelName + ".json")
 				.then((res) => res.json())
 				.then((data) => {
                     console.log(data)
 					this.tiles = data.tiles;
+
+                    let walls = this.tiles.walls;
+                    
+                    let graphArray = Object.keys(walls[0]).map(function(c) {
+                        return walls.map(function(r) { return !!r[c] ? 0 : 1; });
+                    });
+
+                    this.tilesGraph = new Graph(graphArray, {
+                        diagonal: false
+                    });
+                    console.log(this.tilesGraph)
                     this.entities = data.entities;
 
                     this.numRows = data.height ?? data.tiles.walls[0].length;
@@ -33,7 +56,7 @@ class Level {
 		});
 	};
 
-	getFromXY = (x, y, layer) => {
+	static getFromXY = (x, y, layer) => {
         if (Array.isArray(x)) {
             y = x[1];
             x = x[0];
@@ -51,11 +74,11 @@ class Level {
         return this.tiles.walls[y][x] ?? this.tiles.background[y][x];
 	};
 
-    getWallFromXY = (x, y) => {
+    static getWallFromXY = (x, y) => {
         return this.getFromXY(x, y, 'walls');
     }
 
-    getLightFromXY = (x, y) => {
+    static getLightFromXY = (x, y) => {
         if (Array.isArray(x)) {
             y = x[1];
             x = x[0];
@@ -71,15 +94,15 @@ class Level {
         return this.entities.lights[key];
     }
 
-	xyToPos = (x, y) => {
+	static xyToPos = (x, y) => {
 		return [x * this.tileSize, y * this.tileSize];
 	};
 
-	cellToXY = (cell) => {
+	static cellToXY = (cell) => {
 		return [Math.floor(cell / this.numCols), cell % this.numRows];
 	};
 
-    posToXY = (x, y) => {
+    static posToXY = (x, y) => {
         if (Array.isArray(x)) {
             y = x[1];
             x = x[0];
@@ -88,30 +111,30 @@ class Level {
         return [Math.floor(x / this.cellWidth), Math.floor(y / this.cellHeight)]
     }
 
-    posToX = (x) => {
+    static posToX = (x) => {
         return Math.floor(x / this.cellWidth);
     }
 
-    posToY = (y) => {
+    static posToY = (y) => {
         return Math.floor(y / this.cellHeight);
     }
 
-    normalizeXY = (x, y) => {
+    static normalizeXY = (x, y) => {
         return [
             this.normalizeX(x),
             this.normalizeY(y)
         ]
     }
 
-    normalizeX = (x) => {
+    static normalizeX = (x) => {
         return x / this.width;
     }
 
-    normalizeY = (y) => {
+    static normalizeY = (y) => {
         return y / this.height;
     }
 
-    posIsSolid = (x, y) => {
+    static posIsSolid = (x, y) => {
         return !!this.getFromXY(this.posToXY(x, y));
     }
 }

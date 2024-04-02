@@ -24,12 +24,12 @@ class Player {
 		let isGoingUp = dirY < 0;
 
         // Cell positions of left and right player bounds
-		let cellLeft = this.map.posToX(this.x - halfWidth);
-		let cellRight = this.map.posToX(this.x + halfWidth);
+		let cellLeft = Level.posToX(this.x - halfWidth);
+		let cellRight = Level.posToX(this.x + halfWidth);
 
         // Cell positions of top and bottom player bounds
-		let cellTop = this.map.posToY(this.y - halfHeight);
-		let cellBottom = this.map.posToY(this.y + halfHeight);
+		let cellTop = Level.posToY(this.y - halfHeight);
+		let cellBottom = Level.posToY(this.y + halfHeight);
 
         // Make list of all cells hit by player's horizontal bound
 		let cellStartY = [];
@@ -37,8 +37,8 @@ class Player {
 		let iPrev = null;
 		for (let i = cellLeft; i < cellRight + 1; i++) {
 			if (iPrev == undefined || iPrev !== i) {
-				cellStartY.push([i, this.map.posToY(this.y + halfHeight * dirY)]);
-				cellEndY.push([i, this.map.posToY(this.y + dy + halfHeight * dirY)]);
+				cellStartY.push([i, Level.posToY(this.y + halfHeight * dirY)]);
+				cellEndY.push([i, Level.posToY(this.y + dy + halfHeight * dirY)]);
 			}
 			iPrev = i;
 		}
@@ -49,8 +49,8 @@ class Player {
 		iPrev = null;
 		for (let i = cellTop; i < cellBottom + 1; i++) {
 			if (iPrev == undefined || iPrev !== i) {
-				cellStartX.push([this.map.posToX(this.x + halfWidth * dirX), i]);
-				cellEndX.push([this.map.posToX(this.x + dx + halfWidth * dirX), i]);
+				cellStartX.push([Level.posToX(this.x + halfWidth * dirX), i]);
+				cellEndX.push([Level.posToX(this.x + dx + halfWidth * dirX), i]);
 			}
 			iPrev = i;
 		}
@@ -66,7 +66,7 @@ class Player {
 
 			for (let i = 0; i <= Math.abs(currEnd[0] - currStart[0]); i++) {
 				let currCell = currStart[0] + i * dirX;
-				if (this.map.getWallFromXY(currCell, currStart[1]) != undefined) {
+				if (Level.getWallFromXY(currCell, currStart[1]) != undefined) {
 					if (collidedX == undefined || collidedX.distance < i) {
 						collidedX = {
 							distance: i,
@@ -85,7 +85,7 @@ class Player {
 
 			for (let i = 0; i <= Math.abs(currEnd[1] - currStart[1]); i++) {
 				let currCell = currStart[1] + i * dirY;
-				if (this.map.getWallFromXY(currStart[0], currCell) != undefined) {
+				if (Level.getWallFromXY(currStart[0], currCell) != undefined) {
 					if (collidedY == undefined || collidedY.distance < i) {
 						collidedY = {
 							distance: i,
@@ -100,14 +100,14 @@ class Player {
         // Update x and y positions
 		if (!!collidedX) {
 			let cellX = isGoingLeft ? collidedX.cell + 1 : collidedX.cell;
-			this.x = cellX * this.map.tileSize - (isGoingLeft ? 0 : 0.01) - halfWidth * dirX;
+			this.x = cellX * Level.tileSize - (isGoingLeft ? 0 : 0.01) - halfWidth * dirX;
 		} else {
 			this.x += dx;
 		}
 
 		if (!!collidedY) {
 			let cellY = isGoingUp ? collidedY.cell + 1 : collidedY.cell;
-			this.y = cellY * this.map.tileSize - (isGoingUp ? 0 : 0.01) - halfHeight * dirY;
+			this.y = cellY * Level.tileSize - (isGoingUp ? 0 : 0.01) - halfHeight * dirY;
 		} else {
 			this.y += dy;
 		}

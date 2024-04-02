@@ -103,3 +103,38 @@ canvas.hidden {
     top: 8px;
     left: 8px;
 }
+
+#horror {
+    position: fixed;
+    top: 0;
+    left: 30vw;
+    width: 40%;
+    height: 100%;
+    display: none;
+    animation-name: horror;
+    animation-duration: 0.06s;
+    animation-iteration-count: infinite;
+    transition: opacity 1s;
+}
+
+@keyframes horror {
+    0% {
+        margin-left: 0px;
+        top: -32px;
+    }
+
+    25% {
+        margin-left: -32px;
+        top: 0;
+    }
+
+    50% {
+        margin-left: 0px;
+        top: 32px;
+    }
+
+    100% {
+        margin-left: 32px;
+        top: 0;
+    }
+}
