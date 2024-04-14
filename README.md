@@ -10,7 +10,13 @@ This results in a gameplay loop involving peeking around corners to illuminate r
 
 ### Version 0.1
 
-#### Layered Maps & Lighting (v0.1.2)
+#### Lightmaps and Enemy Spawning
+
+- [x] Generate lightmap from static light sources
+- [ ] Add dynamic light sources to lightmap (i.e. Player flashlight)
+- [ ] Spawn entity only in dark areas close to player
+
+#### Layered Maps & Lighting
 
 - [ ] Update player velocity in `move` function, then update position in `update` function
 - [x] Implement multi-layered maps

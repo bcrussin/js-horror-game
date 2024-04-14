@@ -1,6 +1,15 @@
 {
-    "current": "0.1.2",
+    "current": "0.1.3",
     "versions": {
+        "0.1.3": {
+            "title": "Basic Entity Support",
+            "description": "Laid down the framework for a basic entity system and added a demo enemy.",
+            "changes": [
+                "Created `Entity` class",
+                "Implemented A* pathfinding for entity",
+                "Added dummy entity that spawns and chases player after reaching the chest"
+            ]
+        },
         "0.1.2": {
             "title": "Layers & Lighting v1",
             "description": "Implemented ambient lighting, as well as separating maps into foreground and background layers.",
