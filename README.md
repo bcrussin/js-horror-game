@@ -13,8 +13,8 @@ This results in a gameplay loop involving peeking around corners to illuminate r
 #### Lightmaps and Enemy Spawning
 
 - [x] Generate lightmap from static light sources
-- [ ] Add dynamic light sources to lightmap (i.e. Player flashlight)
-- [ ] Spawn entity only in dark areas close to player
+- [x] Add dynamic light sources to lightmap (i.e. Player flashlight)
+- [x] Spawn entity only in dark areas close to player
 
 #### Layered Maps & Lighting
 
@@ -31,7 +31,7 @@ This results in a gameplay loop involving peeking around corners to illuminate r
 - [x] Render point lights in-game
 - [ ] Allow tweaking light settings in map maker
 - [ ] Allow placing lights off-grid
-- [ ] Render lights realistically in map maker
+- [x] Render lights realistically in map maker
   - Point light with `n` radius renders as that size, for example
 
 #### Initial Engine (v0.1.0)
